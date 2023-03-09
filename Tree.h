@@ -4,9 +4,9 @@
 #include "Array.h"
 
 typedef struct {
-  char *type;
-  char *value;
-  Array* childs;
+  char *type;                             //樹節點的類型
+  char *value;                            //樹節點的值
+  Array* childs;                          //樹節點的子節點
 } Tree;
 
 Tree* TreeNew(char *pType, char *pValue);

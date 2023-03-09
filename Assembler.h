@@ -5,17 +5,17 @@
 #include <ctype.h>
 #include "Lib.h"
 
-typedef struct {                                    // ��Ķ������                     
-  Array *codes;                                     //   ���O�����C                 
-  HashTable *symTable;                              //   �Ÿ���                       
-  HashTable *opTable;                               //   ���O��                       
+typedef struct {                                                      
+  Array *codes;                                     // 指令物件陣列              
+  HashTable *symTable;                              // 符號表                    
+  HashTable *opTable;                               // 指令表                   
 } Assembler;                                                                       
                                                                                    
-typedef struct {                                    // ���O����                       
-  int address, opCode, size;                        //   �]�t��}�B�B��X�B           
-  char *label, *op, *args, type;                    //   �Ŷ��j�p�Bop, �B�аO�B       
-  char *objCode;                                    //   �ѼơB���A�B�ت��X           
-} AsmCode;                                          //   �����                       
+typedef struct {                                    // 指令物件                    
+  int address, opCode, size;                        // 記憶體位址 運算碼(LD=00, ST=01) code指令大小  
+  char *label, *op, *args, type;                    // 標記 op 參數 (解析一行line得到三者) 型態(L,A,Ｊ)
+  char *objCode;                                    // 目的碼      
+} AsmCode;                                                               
                                                                                    
 void assemble(char *asmFile, char *objFile);        // ��Ķ�����D�{��              
                                                                                    

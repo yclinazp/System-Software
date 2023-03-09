@@ -3,19 +3,19 @@
 
 #include "Array.h"
 
-typedef struct {        // ±½´y¾¹ªºª«¥óµ²ºc              
-  char *text;           //   ¿é¤Jªºµ{¦¡ (text) 
-  int textLen;          //   ¥Ø«e±½´y¨ìªº¦ì¸m  
-  int textIdx;          //   µ{¦¡ªºÁ`ªø«×      
-  char token[MAX_LEN];  //   ¥Ø«e±½´y¨ìªºµü·J  
+typedef struct {                     
+  char *text;                           // è¼¸å…¥çš„ç¨‹å¼ (text) 
+  int textLen;                          // ç¨‹å¼çš„ç¸½é•·åº¦ 
+  int textIdx;                          // ç›®å‰æƒæä½ç½® 
+  char token[MAX_LEN];                  // ç›®å‰æƒæåˆ°çš„è©å½™
 } Scanner;
 
-Scanner* ScannerNew(char *pText);
+Scanner* ScannerNew(char *pText);    
 void ScannerFree(Scanner *scanner);
-char* ScannerScan(Scanner *scanner);
-Array* tokenize(char *text);
-char *tokenToType(char *token);
-void printTokens(Array *tokens);
+char* ScannerScan(Scanner *scanner);    // æƒæä¸‹ä¸€å€‹token
+Array* tokenize(char *text);            // å°‡ç¨‹å¼è½‰æ›æˆä¸€å€‹ä¸€å€‹token
+char *tokenToType(char *token);         // åˆ¤æ–·tokençš„type 
+void printTokens(Array *tokens);        // print æ‰€æœ‰tokensçš„stringå’Œtype
 
 extern char STRING[];
 extern char NUMBER[];

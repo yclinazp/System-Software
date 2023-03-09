@@ -4,18 +4,22 @@
 #include "Scanner.h"
 #include "Tree.h"
 
-typedef struct {                           // ­åªR¾¹ªºª«¥óµ²ºc      
-  Array *tokens;                           //   µü·J¦ê¦C         
-  Tree *tree;                              //   ­åªR¾ğ (¾ğ®Ú)    
-  Array* stack;                            //   ­åªR¹Lµ{¥Îªº°ïÅ| 
-  int tokenIdx;                            //   µü·J«ü¼Ğ         
+//1.Scanner å°‡textåˆ‡æˆä¸€å€‹å€‹tokens
+//2.Parser èªæ³•å‰–æ æ¯”å°å„å€‹EBNFèªæ³•è¦å‰‡,ä½¿ç”¨stackå°‡tokensè½‰æ›æˆä¸€æ£µèªæ³•æ¨¹
+//3.Parser èªæ„åˆ†æ ç¢ºèªå„å€‹node typeæ˜¯å¦ç›¸å®¹,è¼¸å‡ºå…·æœ‰æ¨™è¨˜çš„èªæ„æ¨¹
+//4.ä¸­é–“ç¢¼
+typedef struct {                                  
+  Array *tokens;                           // è©å½™ä¸²åˆ—       
+  Tree *tree;                              // å‰–ææ¨¹ (æ¨¹æ ¹ )     
+  Array* stack;                            // å‰–æéç¨‹ç”¨çš„å †ç–Š (stackæ˜¯ä¸€ç¨®Array type)  
+  int tokenIdx;                            // ç›®å‰æƒæåˆ°çš„è©å½™ä½ç½®         
 } Parser;                                                     
                                                               
-Parser *parse(char *text);                 // ­åªR¾¹ªº¥Dµ{¦¡     
+Parser *parse(char *text);                 // parserä¸»ç¨‹å¼     
                                                               
-Parser *ParserNew();                       // ­åªR¾¹ªº«Øºc¨ç¼Æ   
-void ParserParse(Parser *p, char *text);   // ­åªR¾¹ªº­åªR¨ç¼Æ   
-void ParserFree(Parser *parser);           // ÄÀ©ñ°O¾ĞÅé         
+Parser *ParserNew();                          
+void ParserParse(Parser *p, char *text);   // å°‡textè½‰æ›æˆå‰–ææ¨¹(p->tree)     
+void ParserFree(Parser *parser);                    
 
 #endif
 

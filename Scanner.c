@@ -11,69 +11,70 @@ char COND_OP[] = "|==|!=|<=|>=|<|>|";
 char ITEM[]= "|id|number|string|";
 char OP[]  = "+-*/<=>!";
 
-#define ch() (scanner->text[scanner->textIdx])
-#define next() (scanner->textIdx++)
+#define ch() (scanner->text[scanner->textIdx])                                  // æŒ‡å‘ç›®å‰æƒæå­—ä¸²çš„å­—å…ƒä½ç½®
+#define next() (scanner->textIdx++)                                             // æŒ‡å‘ç›®å‰æƒæä½ç½®çš„ä¸‹ä¸€å€‹Char 
 
 Scanner* ScannerNew(char *pText) {
-  Scanner *scanner = ObjNew(Scanner, 1);
+  Scanner *scanner = ObjNew(Scanner, 1);                                        // allocate Scanner type* 1 count memory
   scanner->text = pText;
   scanner->textLen = strlen(pText);
   scanner->textIdx = 0;
   return scanner;
 }
-
+//free Scanner
 void ScannerFree(Scanner *scanner) {
   ObjFree(scanner);
 }
-
-char *ScannerScan(Scanner *scanner) {                                           // ±½´y¤U¤@­Óµü·J                           
-  while (strMember(ch(), SPACE))                                                // ©¿²¤ªÅ¥Õ                                 
-    next();                                                                                                              
-  if (scanner->textIdx >= scanner->textLen)                                     // ÀË¬d¬O§_¶W¹L½d³ò                         
+//æƒæä¸‹ä¸€å€‹token
+char *ScannerScan(Scanner *scanner) {                                                                  
+  while (strMember(ch(), SPACE))                                                                            
+    next();                                                                     // ifç›®å‰æƒæä½ç½®=ç©ºç™½, Idx++                                      
+  if (scanner->textIdx >= scanner->textLen)                                     // æª¢æŸ¥æ˜¯å¦è¶…éç¯„åœ                       
     return NULL;                                                                                                         
-  char c = ch();                                                                // ¨ú±o¤U¤@­Ó¦r¤¸                           
-  int begin = scanner->textIdx;                                                 // °O¦íµü·J¶}©lÂI                           
-  if (c == '\"') { // string = ".."                                             // ¦pªG¬O "¡A¥Nªí¦r¦ê¶}ÀY¡A                 
-    next(); // skip begin quote "                                                 
-    while (ch() != '\"') next();                                                // ¤@ª½Åª¨ì¤U¤@­Ó " ²Å¸¹¬°¤î¡C                                 
+  char c = ch();                                                                // å–å¾—ä¸‹ä¸€å€‹å­—å…ƒ                         
+  int begin = scanner->textIdx;                                                 // ç´€éŒ„tokensé–‹å§‹ä½ç½®                        
+  if (c == '\"') { // string = ".."                                             // å¦‚æœæ˜¯" ä»£è¡¨stringé–‹é ­               
+    next(); // skip begin quote "                                               // ä¸€ç›´è®€åˆ°ä¸‹ä¸€å€‹" ç¬¦è™Ÿç‚ºæ­¢
+    while (ch() != '\"') next();                                                // è·³é"                                 
     next(); // skip end quote "                                                                                          
-  } else if (strMember(c, OP)) { // OP , ex : ++, --, <=, >=, ...               // ¦pªG¬OOP(+-*/<=>!µ¥²Å¸¹)                 
-    while (strMember(ch(), OP)) next();                                         // ¤@ª½Åª¨ì¤£¬OOP¬°¤î                     
-  } else if (strMember(c, DIGIT)) { // number, ex : 312, 77568, ...             // ¦pªG¬O¼Æ¦r                               
-    while (strMember(ch(), DIGIT)) next();                                      // ¤@ª½Åª¨ì¤£¬O¼Æ¦r¬°¤î                   
-  } else if (strMember(c, ALPHA)) { // name, ex : int, sum, i, for, if, ....    // ¦pªG¬O­^¤å¦r¥À                           
-    while (strMember(ch(), ALPHA) || strMember(ch(), DIGIT)) next();            // ¤@ª½Åª¨ì¤£¬O­^¤å¦r¥À (©Î¼Æ¦r)¬°¤î (ex: x1y2z)
+  } else if (strMember(c, OP)) { // OP , ex : ++, --, <=, >=, ...               // å¦‚æœæ˜¯OP (+-*/<=>!)              
+    while (strMember(ch(), OP)) next();                                         // ä¸€ç›´è®€åˆ°ä¸æ˜¯OPç¬¦è™Ÿç‚ºæ­¢                
+  } else if (strMember(c, DIGIT)) { // number, ex : 312, 77568, ...             // å¦‚æœæ˜¯æ•¸å­—                          
+    while (strMember(ch(), DIGIT)) next();                                      // ä¸€ç›´è®€åˆ°ä¸æ˜¯æ•¸å­—è™Ÿç‚ºæ­¢                                
+  } else if (strMember(c, ALPHA)) { // name, ex : int, sum, i, for, if, ....    // å¦‚æœæ˜¯è‹±æ–‡å­—æ¯                      
+    while (strMember(ch(), ALPHA) || strMember(ch(), DIGIT)) next();            // ä¸€ç›´è®€åˆ°ä¸æ˜¯è‹±æ–‡å­—æ¯(æˆ–æ•¸å­—)ç‚ºæ­¢ ex:x1y2z
   } else // some other symbol, such as #                                                         
-    next();                                                                     // §_«h¡A¶Ç¦^³æ¤@¦r¤¸                                                                
-  strSubstr(scanner->token, scanner->text, begin, scanner->textIdx-begin);      // ³]©wtoken¬°(begin¡KtextIdx) ¤§¶¡ªº¤l¦r¦ê
-  return scanner->token;                                                        // ¶Ç¦^tokenµü·J
-}                                                                                             
-                                                                                                             
-Array* tokenize(char *text) {                                                   // ±Nµ{¦¡Âà´«¦¨¤@­Ó¤@­Óªºµü·J                             
-  Array *tokens = ArrayNew(10);                                                                                                                     
+    next();                                                                     // ç›®å‰æƒæä½ç½®+1                                                             
+  strSubstr(scanner->token, scanner->text, begin, scanner->textIdx-begin);      // è¨­å®štokenç‚º(beginåˆ°textIdx) 
+  return scanner->token;                                                         
+}              
+
+// å°‡ç¨‹å¼è½‰æ›æˆä¸€å€‹ä¸€å€‹token                                                                                                            
+Array* tokenize(char *text) {                                                                                
+  Array *tokens = ArrayNew(10);                                                 // allocate Array tokens memory (item=10)                                                                 
   Scanner *scanner = ScannerNew(text);                                                                                                              
   char *token = NULL;                                                                                                    
-  while ((token = ScannerScan(scanner))!= NULL) {                               // ¤£Â_¨ú¥X¤U¤@­Óµü·J¡Aª½¨ìµ{¦¡¦r¦êµ²§ô¬°¤î
-    ArrayAdd(tokens, newStr(token));                                            
+  while ((token = ScannerScan(scanner))!= NULL) {                               // ä¸æ–·çš„å–å‡ºä¸‹ä¸€å€‹token,ç›´åˆ°ç¨‹å¼å­—ä¸²çµæŸç‚ºæ­¢
+    ArrayAdd(tokens, newStr(token));                                            // å°‡æƒæå¥½çš„token æ”¾å…¥Array tokens
     printf("token=%s\n", token);                                                              
   }                                                                                           
   ScannerFree(scanner);                                                                       
   return tokens;                                                                                                         
 }                                                                                                                        
-                                                                                                                         
-char *tokenToType(char *token) {                                                // §PÂ_¨Ã¨ú±o tokenªº«¬ºA                                                
-  if (strPartOf(token, KEYWORDS))                                               //   ¦pªG¬OÃöÁä¦r if, for, ¡K                                            
-    return token;                                                               //   «¬ºA§Y¬°¸ÓÃöÁä¦r                                                  
-  else if (token[0] == '\"')                                                    // ¦pªG¥H²Å¸¹ " ¶}ÀY¡A«h                  
-    return STRING;                                                              //   «¬ºA¬° STRING                        
-  else if (strMember(token[0], DIGIT))                                          // ¦pªG¬O¼Æ¦r¶}ÀY¡A«h                     
-    return NUMBER;                                                              //   «¬ºA¬° NUMBER                        
-  else if (strMember(token[0], ALPHA))                                          // ¦pªG¬O­^¤å¦r¥À¶}ÀY¡A«h                 
-    return ID;                                                                  //   «¬ºA¬° ID                            
-  else                                                                          // §_«h (¹³¬O +,-,*,/,>,<,¡K.)            
-    return token;                                                               //   «¬ºA§Y¬°¸Ó token                     
+// åˆ¤æ–·tokençš„type                                                                                                                       
+char *tokenToType(char *token) {                                                                                               
+  if (strPartOf(token, KEYWORDS))                                               // å¦‚æœæ˜¯|if|for|while|return|, typeç‚ºè©²é—œéµå­—è‡ªå·±                                            
+    return token;                                                                                                                    
+  else if (token[0] == '\"')                                                    // å¦‚æœä»¥"é–‹é ­ type=string               
+    return STRING;                                                                                         
+  else if (strMember(token[0], DIGIT))                                          // å¦‚æœä»¥æ•¸å­—é–‹é ­ type=number                     
+    return NUMBER;                                                                                         
+  else if (strMember(token[0], ALPHA))                                          // å¦‚æœä»¥è‹±æ–‡å­—æ¯é–‹é ­ type=ID                  
+    return ID;                                                                                                 
+  else                                                                          // å¦å‰‡å°±æ˜¯å–®ä¸€å­—å…ƒ (åƒæ˜¯+ - * / > < { }) type=è©²token            
+    return token;                                                                                       
 }                                                                                           
-                                                                                            
+//print æ‰€æœ‰tokensçš„stringå’Œtype                                                                                          
 void printTokens(Array *tokens) {                                                           
   printf("tokens->count = %d\n", tokens->count);
   int i;

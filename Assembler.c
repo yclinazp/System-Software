@@ -1,24 +1,25 @@
 #include "Assembler.h"
 
-void assemble(char *asmFile, char *objFile) {                   // ²ÕÄ¶¾¹ªº¥D­n¨ç¼Æ
-  printf("Assembler:asmFile=%s objFile=%s\n", asmFile,objFile); // ¿é¤J²Õ¦X»y¨¥¡B¿é¥X¥ØªºÀÉ
+void assemble(char *asmFile, char *objFile) {                   
+  printf("Assembler:asmFile=%s objFile=%s\n", asmFile,objFile); 
   printf("===============Assemble=============\n");
-  char *text = newFileStr(asmFile);                             // Åª¨úÀÉ®×¨ì text ¦r¦ê¤¤
-  Assembler *a = AsmNew();                                      
-  AsmPass1(a, text);                                            // ²Ä¤@¶¥¬q¡G­pºâ¦ì§} 
+  char *text = newFileStr(asmFile);                             // è®€å–æª”æ¡ˆåˆ°textå­—ä¸²ä¸­
+  Assembler *a = AsmNew();                                      // allocate Assembler type memory
+  AsmPass1(a, text);                                            // ç·¨è­¯ç¬¬ä¸€éšæ®µ 
   printf("===============SYMBOL TABLE=========\n");             
-  HashTableEach(a->symTable, (FuncPtr1) AsmCodePrintln);        // ¦L¥X²Å¸¹ªí   
-  AsmPass2(a);                                                  // ²Ä¤G¶¥¬q¡G«Øºc¥Øªº½X 
-  AsmSaveObjFile(a, objFile);                                      
-  AsmFree(a);                                                   // ¿é¥X¥ØªºÀÉ   
-  freeMemory(text);                                             // ÄÀ©ñ°O¾ĞÅé   
-}                                                               
+  HashTableEach(a->symTable, (FuncPtr1) AsmCodePrintln);        // print symboltable
+  AsmPass2(a);                                                  // ç·¨è­¯ç¬¬äºŒéšæ®µ 
+  AsmSaveObjFile(a, objFile);                                   // å°‡objCode(hexa)è¼¸å‡ºobjfile(binary)  
+  AsmFree(a);                                                   // free a  
+  freeMemory(text);                                             // free text   
+}                  
 
+//allocate Assembler type memory
 Assembler* AsmNew() {
-  Assembler *a=ObjNew(Assembler, 1);
-  a->codes = ArrayNew(10);
-  a->symTable = HashTableNew(127);
-  a->opTable = OpTableNew();
+  Assembler *a=ObjNew(Assembler, 1);//allocate Assembler type*1 count memory
+  a->codes = ArrayNew(10); //allocate Array (item = 10) memory
+  a->symTable = HashTableNew(127); //allocate (item = 127) hashtable (2D Array) memory
+  a->opTable = OpTableNew(); //å°‡opListè½‰æ›æˆOp type(*name, code, type)æ”¾å…¥hashtable(op->name, op)
   return a;
 }
 
@@ -29,139 +30,139 @@ void AsmFree(Assembler *a) {
   ObjFree(a);
 }
 
-void AsmPass1(Assembler *a, char *text) {             // ²Ä¤@¶¥¬qªº²ÕÄ¶           
+//è§£ææ¯ä¸€è¡Œopcode, type, args, label,è¨ˆç®—æ¯ä¸€è¡Œaddress, å°‡labelæ”¾å…¥symboltable
+void AsmPass1(Assembler *a, char *text) {                     
   int i, address = 0, number;                                                 
-  Array* lines = split(text, "\r\n", REMOVE_SPLITER); // ±N²Õ¦X»y¨¥¤À³Î¦¨¤@¦æ¤@¦æ
-  ArrayEach(lines, strPrintln);                       // ¦L¥X¥H«KÆ[¹î           
+  Array* lines = split(text, "\r\n", REMOVE_SPLITER); // å°‡assembly codeåˆ‡æˆä¸€è¡Œä¸€è¡Œ (æ›è¡Œchar \r\n)
+  ArrayEach(lines, strPrintln);                       // printæ¯ä¸€è¡Œstringä¸”æ›è¡Œ           
   printf("=================PASS1================\n");               
-  for (i=0; i<lines->count; i++) {                    // ¹ï©ó¨C¤@¦æ                        
-      strReplace(lines->item[i], SPACE, ' ');                   
-      AsmCode *code = AsmCodeNew(lines->item[i]);     // «Ø¥ß«ü¥Oª«¥ó
-      code->address = address;                        // ³]©w¸Ó¦æªº¦ì§}      
-      Op *op = HashTableGet(opTable, code->op);       // ¬d¸ß¹Bºâ½X            
-      if (op != NULL) {                               // ¦pªG¬d¨ì
-        code->opCode = op->code;                      //    ³]©w¹Bºâ½X
-        code->type = op->type;                        //    ³]©w«¬ºA
+  for (i=0; i<lines->count; i++) {                    // å°æ¯ä¸€è¡Œ                        
+      strReplace(lines->item[i], SPACE, ' ');         // å°‡\t\n\ræ›æˆç©ºchar        
+      AsmCode *code = AsmCodeNew(lines->item[i]);     // è§£ælineå°‡label, op, argsæ”¾åˆ°Asmcode type
+      code->address = address;                        // è¨­å®šè©²è¡Œçš„address
+      Op *op = HashTableGet(opTable, code->op);       // åˆ©ç”¨code->op(key) åˆ°hashtable get opcode and type(L,A,J)      
+      if (op != NULL) {                               // if key exist
+        code->opCode = op->code;                      // setting opCode (00[LD], 01[ST])
+        code->type = op->type;                        // setting type(L,A,J)   
       }                                                  
-      if (strlen(code->label)>0)                      // ¦pªG¦³¼Ğ°O²Å¸¹
-        HashTablePut(a->symTable, code->label, code); //    ¥[¤J²Å¸¹ªí¤¤
-      ArrayAdd(a->codes, code);                       //  «Øºc«ü¥Oª«¥ó°}¦C
-      AsmCodePrintln(code);                           //    ¦L¥XÆ[¹î
-      code->size = AsmCodeSize(code);                 //  ­pºâ«ü¥O¤j¤p
-      address += code->size;                          //  ­pºâ¤U¤@­Ó«ü¥O¦ì§}
+      if (strlen(code->label)>0)                      // ifå«æœ‰symbol
+        HashTablePut(a->symTable, code->label, code); // put into symbol table
+      ArrayAdd(a->codes, code);                       // å°‡Asmcode code(item) æ”¾å…¥Assenbler codes(Array)
+      AsmCodePrintln(code);                           // print Asmcode code
+      code->size = AsmCodeSize(code);                 // è¨ˆç®—æŒ‡ä»¤æ‰€ä½”byteså¤§å°
+      address += code->size;                          // è¨ˆç®—å‡ºä¸‹ä¸€å€‹instruction address
   }                                                                           
-  ArrayFree(lines, strFree);                          // ÄÀ©ñ°O¾ĞÅé
+  ArrayFree(lines, strFree);                          // free Array lines
 }
 
-void AsmPass2(Assembler *a) {                         // ²ÕÄ¶¾¹ªº²Ä¤G¶¥¬q
+void AsmPass2(Assembler *a) {                          
   printf("=============PASS2==============\n");                       
   int i;                                                              
-  for (i=0; i<a->codes->count; i++) {                 // ¹ï¨C¤@­Ó«ü¥O    
+  for (i=0; i<a->codes->count; i++) {                 // å°æ¯ä¸€æŒ‡ä»¤ (Arrayæ•¸é‡)   
     AsmCode *code = a->codes->item[i];                                
-    AsmTranslateCode(a, code);                        //   ¶i¦æ½s½X°Ê§@  
-    AsmCodePrintln(code);
+    AsmTranslateCode(a, code);                        // ç·¨æˆobject code  
+    AsmCodePrintln(code);                  
   }
 }
-
-void AsmTranslateCode(Assembler *a, AsmCode *code) {                       // «ü¥Oªº½s½X¨ç¼Æ           
+//è½‰æ›æˆobjCode(hexa)
+void AsmTranslateCode(Assembler *a, AsmCode *code) {                                  
   char p1[100], p2[100], p3[100], pt[100];                                                       
   int ra=0, rb=0, rc=0, cx=0;                                                  
   char cxCode[9]="00000000", objCode[100]="", args[100]="";                    
   strcpy(args, code->args);                                                    
   strReplace(args, ",", ' ');                                                  
-  int pc = code->address + 4;                                              // ´£¨ú«áPC¬°¦ì§}+4         
-  switch (code->type) {                                                    // ®Ú¾Ú«ü¥O«¬ºA             
-    case 'J' :                                                             // ³B²z J «¬«ü¥O              
-      if (!strEqual(args, "")) {                                                                    
-        AsmCode *labelCode = HashTableGet(a->symTable,args);               //   ¨ú±o²Å¸¹¦ì§}            
-        cx = labelCode->address - pc;                                      //   ­pºâ cx Äæ¦ì            
+  int pc = code->address + 4;                                              // fecth instructionä¹‹å¾ŒPC+4         
+  switch (code->type) {                                                                 
+    case 'J' :                                                             // è™•ç†J type           
+      if (!strEqual(args, "")) {                                           // if argsä¸ç‚ºç©ºå­—ä¸²(é•·åº¦ç‚º0)                         
+        AsmCode *labelCode = HashTableGet(a->symTable,args);               // å–å¾—symbol address        
+        cx = labelCode->address - pc;                                      // è¨ˆç®—cx (PCç›¸å°å®šå€æ³•)           
         sprintf(cxCode, "%8x", cx);                                                                 
       }                                                                                             
-      sprintf(objCode, "%2x%s", code->opCode, &cxCode[2]);                 //   ½s¥X¥Øªº½X(16¶i¦ì)      
+      sprintf(objCode, "%2x%s", code->opCode, &cxCode[2]);                 // opcode(2ç¢¼)+å¾cxç¬¬2åˆ°ç¬¬8å€‹å…ƒç´ (å…±å…­ç¢¼)     
       break;                                                                                        
-    case 'L' :                                                                                      
-      sscanf(args, "R%d %s", &ra, p2);                                        
-      if (strHead(p2, "[")) {                                                  
-        sscanf(p2, "[R%d+%s]", &rb, pt);                                       
+    case 'L' :                                                             // è™•ç†L type                         
+      sscanf(args, "R%d %s", &ra, p2);                                     // sscanf æŠŠargså­—ä¸²è§£ææˆæ ¼å¼åŒ–è¼¸å…¥
+      if (strHead(p2, "[")) {                                              // if p2ä»¥"["é–‹é ­ (è¡¨ç¤ºæ˜¯memory location [Ra])
+        sscanf(p2, "[R%d+%s]", &rb, pt);                                   // å†å–å‡ºRb pt(Cx)  
         if (sscanf(pt, "R%d", &rc)<=0)                                         
-          sscanf(pt, "%d", &cx);                                               
-      } else if (sscanf(p2, "%d", &cx)>0) {                                    
+          sscanf(pt, "%d", &cx);                                           // å°‡pt assignçµ¦cx    
+      } else if (sscanf(p2, "%d", &cx)>0) {                                // if p2å¯ä»¥è½‰æ›æˆåé€²ä½, å°‡p2çµ¦cx  
       } else {                                                             
-        AsmCode *labelCode = HashTableGet(a->symTable, p2);                    
-        cx = labelCode->address - pc;                                      
-        rb = 15; // R[15] is PC                                            
+        AsmCode *labelCode = HashTableGet(a->symTable, p2);                // find symbol p2 in symboltable 
+        cx = labelCode->address - pc;                                      // è¨ˆç®—cx (PCç›¸å°å®šå€æ³•)  
+        rb = 15; // R[15] is PC                                            // Rb = PC
       }                                                                         
-      sprintf(cxCode, "%8x", cx);                                              
-      sprintf(objCode, "%2x%x%x%s", code->opCode, ra, rb, &cxCode[4]);         
+      sprintf(cxCode, "%8x", cx);                                          // sprintfå°‡cx stringè½‰æ›æˆå…«ä½hexo   
+      sprintf(objCode, "%2x%x%x%s", code->opCode, ra, rb, &cxCode[4]);     // å–cxå¾Œå››ç¢¼
       break;                                                               
-    case 'A' :                                                             // ³B²z A «¬«ü¥O         
-      sscanf(args, "%s %s %s", p1, p2, p3);                                //   ¨ú±o°Ñ¼Æ            
-      sscanf(p1, "R%d", &ra);                                              //   ¨ú±ora¼È¦s¾¹¥N¸¹    
-      sscanf(p2, "R%d", &rb);                                              //   ¨ú±orb¼È¦s¾¹¥N¸¹    
-      if (sscanf(p3, "R%d", &rc)<=0)                                       //   ¨ú±orc¼È¦s¾¹¥N¸¹    
-        sscanf(p3, "%d", &cx);                                             //   ©ÎªÌ¬O cx °Ñ¼Æ      
+    case 'A' :                                                             // è™•ç†A type      
+      sscanf(args, "%s %s %s", p1, p2, p3);                                         
+      sscanf(p1, "R%d", &ra);                                              // å–å¾—Ra     
+      sscanf(p2, "R%d", &rb);                                              // å–å¾—Rb         
+      if (sscanf(p3, "R%d", &rc)<=0)                                              
+        sscanf(p3, "%d", &cx);                                             // å–å¾—Rb,ä¸æ˜¯Ré–‹é ­å‰‡è½‰æ›æˆcx        
       sprintf(cxCode, "%8x", cx);                                                                   
-      sprintf(objCode, "%2x%x%x%x%s", code->opCode,ra,rb,rc,&cxCode[5]);   //   ½s¥X¥Øªº½X(16¶i¦ì)  
+      sprintf(objCode, "%2x%x%x%x%s", code->opCode,ra,rb,rc,&cxCode[5]);   // å–cxå¾Œ3ç¢¼    
       break;                                                                                        
-    case 'D' : {                                                           // ³B²z¬O¸ê®Æ«Å§i                             
-      // §Ú­Ì±N¸ê®Æ«Å§i  RESW, RESB, WORD, BYTE ¤]µø¬°¤@ºØ«ü¥O¡A¨ä§ÎºA¬° D
+    case 'D' : {                                                           // è™•ç†D type (è³‡æ–™å®£å‘Š)                                
       char format4[]="%8x", format1[]="%2x", *format = format1;            
-      switch (code->opCode) {                                              // ¦pªG¬O RESW    
-        case OP_RESW:                                                      //       ©Î RESB 
-        case OP_RESB:                                                      //         
-          memset(objCode, '0', code->size*2);                              // ¥Øªº½X¬° 0000¡K.
+      switch (code->opCode) {                                                  
+        case OP_RESW:                                                              
+        case OP_RESB:                                                      // opCode=RESB+RESW        
+          memset(objCode, '0', code->size*2);                              // set objCode all to 0
           objCode[code->size*2] = '\0';
-          break;                                                           // ¦pªG¬O WORD:            
-        case OP_WORD:                                                                
-          format = format4;                                                // ³]©w¿é¥X®æ¦¡¬° %8x 
-        case OP_BYTE: {                                                    // ¦pªG¬O BYTE : ¿é¥X®æ¦¡¬° %2x
-          Array *array = split(args, " ", REMOVE_SPLITER);                 //   ¨ä¥Øªº½X¬°¨C­Ó¼Æ¦rÂà¬°16¶i¦ìªºµ²ªG
+          break;                                                                       
+        case OP_WORD:                                                      // opCode= WORD and BYTE      
+          format = format4;                                                // è¼¸å‡º%8x
+        case OP_BYTE: {                                                   
+          Array *array = split(args, " ", REMOVE_SPLITER);                 // ä»¥ç©ºæ ¼ç‚ºåˆ†éš”ç¬¦è™Ÿæ‹†è§£argsæˆtokens  
           char *objPtr = objCode;
           int i=0;
-          for (i=0; i<array->count; i++) {                                 
+          for (i=0; i<array->count; i++) {                                 // å°æ¯ä¸€è¡Œtokens
               char *item = array->item[i];
-              if (isdigit(item[0]))
-                sprintf(objPtr, format, atoi(item));
-              else {
-                AsmCode *itemCode = HashTableGet(a->symTable, item);
-                sprintf(objPtr, format, itemCode->address);
+              if (isdigit(item[0]))                                        // if itemç¬¬ä¸€å€‹ç‚ºæ•¸å­—
+                sprintf(objPtr, format, atoi(item));                       // è½‰æ›æˆæ•´æ•¸, è¼¸å‡ºæˆ%8xå½¢å¼è‡³objPtr
+              else {                                                       // if itemç‚ºsymbol
+                AsmCode *itemCode = HashTableGet(a->symTable, item);       // åˆ°symboltableå°‹æ‰¾
+                sprintf(objPtr, format, itemCode->address);                // å°‡symbolå°æ‡‰çš„address, è¼¸å‡ºæˆ%8xå½¢å¼è‡³objPtr
               }
-              objPtr += strlen(objPtr);
+              objPtr += strlen(objPtr);                                    // å°‡objPtrç§»å‹•åˆ°å¾Œé¢charä½ç½®, ä»¥ä¾¿ä¸‹ä¸€è¡Œtokenså„²å­˜char
           }
           ArrayFree(array, strFree);
-          break;
-        } // case OP_BYTE:
-      } // switch
-      break;
-    } // case 'D'
+          break;//for opCode= WORD and BYTE
+        } 
+      } 
+      break;//for case 'D'
+    } 
     default: 
-      strcpy(objCode, "");
-      break;
+      strcpy(objCode, "");                                                 // éä»¥ä¸Štype,objcode=ç©ºå­—ä¸²
+      break;//for switch code->type
   }
-  strReplace(objCode, " ", '0');
-  strToUpper(objCode);
-  code->objCode = newStr(objCode);
+  strReplace(objCode, " ", '0');                                           // replace ç©ºæ ¼ with 0 (objCodeå›ºå®šé•·åº¦ç‚º8)
+  strToUpper(objCode);                                                     // è½‰å¤§å¯«
+  code->objCode = newStr(objCode);                                         // store at AsmCode objCode
 }
-
+//å°‡objCode(hexa)è¼¸å‡ºobjfile(binary)
 void AsmSaveObjFile(Assembler *a, char *objFile) {
   printf("==========Save to ObjFile:%s==========\n", objFile);
-  FILE *file = fopen(objFile, "wb");
+  FILE *file = fopen(objFile, "wb");                                       // open with binary mode
   int i;
-  for (i=0; i<a->codes->count; i++) {
+  for (i=0; i<a->codes->count; i++) {                                      // å°æ¯ä¸€è¡ŒAsmCode code
     AsmCode *code = a->codes->item[i];
     char *objPtr = code->objCode;
-    while (*objPtr != '\0') {
-      int x;
-      sscanf(objPtr, "%2x", &x);
-      assert(x >= 0 && x < 256);
-      BYTE b = (BYTE) x;
-      fwrite(&b, sizeof(BYTE), 1, file);
-      objPtr += 2;
-      char bstr[3];
-      sprintf(bstr, "%2x", b);
-      strReplace(bstr, " ", '0');
-      strToUpper(bstr);
-      printf("%s", bstr);
+    while (*objPtr != '\0') {                                              // ç”¨objPtr go through æ•´å€‹objCode
+      int x; 
+      sscanf(objPtr, "%2x", &x);                                           // å¾objPtrè®€å–2ä½hex(=8ä½binary,= 1byte) æ”¾åˆ°x
+      assert(x >= 0 && x < 256);                                           // ç¢ºä¿è½‰æ›å¾Œçš„xåœ¨ä¸€å€‹byteç¯„åœå…§
+      BYTE b = (BYTE) x;                                                   // å°‡xè½‰æ›æˆ1 byte b
+      fwrite(&b, sizeof(BYTE), 1, file);                                   // write b in file
+      objPtr += 2;                                                         // objPtr move to next byte
+      char bstr[3];                                                        
+      sprintf(bstr, "%2x", b);                                             // å°‡b=15è½‰æ›æˆstring bstr="0F"
+      strReplace(bstr, " ", '0');                                          // ç©ºæ ¼è½‰æˆ0       
+      strToUpper(bstr);                                                    // è½‰å¤§å¯«  
+      printf("%s", bstr);                                                  // å°å‡ºstring bstr
     }
   }
   printf("\n");
@@ -170,32 +171,33 @@ void AsmSaveObjFile(Assembler *a, char *objFile) {
 
 int AsmCodePrintln(AsmCode *code) {
   char label[100] = "", address[100], buffer[200];
-  if (strlen(code->label)>0)
-    sprintf(label, "%s:", code->label);
-  sprintf(address, "%4x", code->address);
-  strReplace(address, " ", '0');
+  if (strlen(code->label)>0) 
+    sprintf(label, "%s:", code->label); //è¼¸å‡º%s,å°‡æ ¼å¼åŒ–è¼¸å‡ºçš„çµæœå­—ä¸²åˆ°label
+  sprintf(address, "%4x", code->address);//è¼¸å‡ºä½”4ä½hexo,å°‡æ ¼å¼åŒ–è¼¸å‡ºçš„çµæœå­—ä¸²åˆ°address
+  strReplace(address, " ", '0'); //å°‡ç©ºæ ¼æ›æˆ0
+  //args (%-14s)æœƒè¼¸å‡ºä½”14ä½string å­˜åœ¨buffer
   sprintf(buffer, "%s %-8s %-4s %-14s %c %2x %s\n", address, label, code->op, code->args, code->type, code->opCode, code->objCode);
-  strToUpper(buffer);
+  strToUpper(buffer);//å°‡bufferè½‰æˆå¤§å¯«å­—æ¯
   printf(buffer);
 }
 
 AsmCode* AsmCodeNew(char *line) {
-  AsmCode* code = ObjNew(AsmCode,1);
+  AsmCode* code = ObjNew(AsmCode,1);//allocate AsmCode type*1 count memory
   char label[100]="", op[100]="", args[100]="", temp[100];
-  int count = sscanf(line, "%s %s %[^;]", label, op, args);
-  if (strTail(label, ":")) {
-    strTrim(temp, label, ":");
-    strcpy(label, temp);
+  int count = sscanf(line, "%s %s %[^;]", label, op, args);//å°‡lineè§£ææˆlabel, op, args(args:éåˆ†è™Ÿçš„å­—å…ƒ)
+  if (strTail(label, ":")) { //labelçš„æœ€å¾Œç­‰æ–¼":"
+    strTrim(temp, label, ":"); //remove labelçš„":",æ”¾åœ¨temp
+    strcpy(label, temp); //æ”¾å›label
   } else {
-    strcpy(label, "");
-    sscanf(line, "%s %[^;]", op, args);
+    strcpy(label, ""); //label = NULL
+    sscanf(line, "%s %[^;]", op, args); //labelå·²ç‚ºNULL,é‡æ–°è§£æ line å­—ä¸²ï¼Œå°‡ opã€args å­˜åˆ°å°line
   }
 //  printf("label=%s op=%s args=%s\n", code->label, op, args);
-  code->label = newStr(label);
+  code->label = newStr(label); // å°‡ labelã€opã€args å­˜åˆ° AsmCode
   code->op = newStr(op);
-  strTrim(temp, args, SPACE);
+  strTrim(temp, args, SPACE);//remove argsçš„"\t\n\r",æ”¾åœ¨temp
   code->args = newStr(temp);
-  code->type = ' ';
+  code->type = ' ';//è¨­ç‚ºç©ºchar
   code->opCode = OP_NULL;
 //  AsmCodePrintln(code);
   return code;
@@ -209,19 +211,20 @@ void AsmCodeFree(AsmCode *code) {
   freeMemory(code);
 }
 
-int AsmCodeSize(AsmCode *code) {                    // ­pºâ«ü¥Oªº¤j¤p     
-  switch (code->opCode) {                           // ®Ú¾Ú¹Bºâ½X op                       
-    case OP_RESW :                                  //  ¦pªG¬ORESW       
-      return 4 * atoi(code->args);                  //   ¤j¤p¬° 4*«O¯d¶q  
-    case OP_RESB :                                  // ¦pªG¬ORESB        
-      return atoi(code->args);                      //   ¤j¤p¬° 1*«O¯d¶q  
-    case OP_WORD :                                  // ¦pªG¬OWORD        
-      return 4 * (strCountChar(code->args, ",")+1); //   ¤j¤p¬° 4*°Ñ¼Æ­Ó¼Æ
-    case OP_BYTE :                                  // ¦pªG¬OBYTE        
-      return strCountChar(code->args, ",")+1;       //   ¤j¤p¬°1*°Ñ¼Æ­Ó¼Æ                  
-    case OP_NULL :                                  // ¦pªG¥u¬O¼Ğ°O                      
-      return 0;                                     //   ¤j¤p¬° 0        
-    default :                                       // ¨ä¥L±¡§Î («ü¥O)   
-      return 4;                                     //   ¤j¤p¬° 4
+// è¨ˆç®—AsmCodeæŒ‡ä»¤å¤§å°, CPU0æ¯å€‹æŒ‡ä»¤ä½”4 bytes
+int AsmCodeSize(AsmCode *code) {                        
+  switch (code->opCode) {    //code->opCode = (LD=00, ST=01)                                          
+    case OP_RESW :                                    
+      return 4 * atoi(code->args);                  // å°‡argsæ•´æ•¸stringè½‰æˆæ•´æ•¸*4 (byte)
+    case OP_RESB :                                          
+      return atoi(code->args);                      // å°‡argsæ•´æ•¸stringè½‰æˆæ•´æ•¸*1 (byte)
+    case OP_WORD :                                        
+      return 4 * (strCountChar(code->args, ",")+1); // ç´€éŒ„","å‡ºç¾æ¬¡æ•¸, argså€‹æ•¸*4  (byte)
+    case OP_BYTE :                                      
+      return strCountChar(code->args, ",")+1;       // argså€‹æ•¸*1  (byte)              
+    case OP_NULL :                                  // OP_NULL = 0xFF           
+      return 0;                                              
+    default :                                      
+      return 4;                                     // 4 byte
   }                                                   
 }

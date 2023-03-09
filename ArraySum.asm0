@@ -12,7 +12,7 @@ FOR:
 	JNE	FOR			;   goto FOR;
 	ST	R1, sum		; sum=R1
 	LD	R8, sum		; R8=sum
-	RET
+	RET 
 a:	WORD	3, 7, 4	; int a[]={3,7,4}
 aptr:	WORD 	a	; int *aptr = &a
 sum:	WORD	0	; int sum = 0

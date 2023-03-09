@@ -1,9 +1,9 @@
 #include "Parser.h"
 
-Parser *parse(char *text) {        // ­åªR¾¹ªº¥D­n¨ç¼Æ          
-  Parser *p=ParserNew();           // «Ø¥ß­åªR¾¹       
-  ParserParse(p, text);            // ¶}©l­åªR         
-  return p;                        // ¶Ç¦^­åªR¾¹       
+Parser *parse(char *text) {                 
+  Parser *p=ParserNew();           // å»ºç«‹å‰–æå™¨    
+  ParserParse(p, text);            // é–‹å§‹å‰–æ,å°‡textè½‰æ›æˆå‰–ææ¨¹(p->tree)      
+  return p;                               
 }
 
 char* nextToken(Parser *p);
@@ -24,9 +24,9 @@ BOOL isNext(Parser *p, char *pTypes);
 char *next(Parser *p, char *pTypes);
 
 Parser *ParserNew() {
-  Parser *parser = ObjNew(Parser, 1);
-  parser->tokens = NULL;
-  parser->tree = NULL;
+  Parser *parser = ObjNew(Parser, 1);                     // allocate Parser object*1 count memory
+  parser->tokens = NULL;                                  
+  parser->tree = NULL;                                    
   parser->stack = ArrayNew(10);
   return parser;
 }
@@ -38,16 +38,16 @@ void ParserFree(Parser *parser) {
   ObjFree(parser);
 }
 
-void ParserParse(Parser *p, char *text) {                 // ­åªRª«¥óªº¥D¨ç¼Æ            
-  printf("======= tokenize =======\n");                   //   ­º¥ı©I¥s±½´y¾¹ªº¥D¨ç¼Æ tokenize() ±Nµ{¦¡Âà´«¬°µü·J¦ê¦C
-  p->tokens = tokenize(text);                             
+void ParserParse(Parser *p, char *text) {                            
+  printf("======= tokenize =======\n");                   
+  p->tokens = tokenize(text);                             // å°‡textè½‰æˆtokenä¸²åˆ—
   printTokens(p->tokens);                                                     
-  p->tokenIdx = 0;                                                                    
-  printf("======= parsing ========\n");                                       
-  p->tree = parseProg(p);                                 // ¶}©l­åªR PROG = BaseList
-  if (p->stack->count != 0) {                             // ¦pªG­åªR§¹¦¨«á°ïÅ|¬OªÅªº¡A¨º´N¬O­åªR¦¨¥\ 
-    printf("parse fail:stack.count=%d", p->stack->count); //   §_«h´N´£¥Ü¿ù»~°T®§
-    error();                                                               
+  p->tokenIdx = 0;                                                                   
+  printf("======= parsing ========\n");                   // é–‹å§‹å‰–æ                    
+  p->tree = parseProg(p);                                 // å¾PROG = baselistè¦å‰‡é–‹å§‹,å¦‚æœå‰–æå®Œæˆå¾Œstackç‚ºç©º,ç‚ºæˆåŠŸ
+  if (p->stack->count != 0) {                             // å¦å‰‡å°å‡ºéŒ¯èª¤è¨Šæ¯ 
+    printf("parse fail:stack.count=%d", p->stack->count);  
+    error();                                                              
   }
 }
 
@@ -56,156 +56,150 @@ void error() {
   exit(1);
 }
 
-// PROG = BaseList
-Tree *parseProg(Parser *p) {                // ­åªR PROG=BaseList ³W«h    
-  push(p, "PROG");                                                      
-  parseBaseList(p);                         // «Ø¥ß PROG ªº¾ğ®Ú          
-  return pop(p, "PROG");                    //  ­åªR BaseList¡A            
-}                                           // ¨ú¥X PROG ªº­åªR¾ğ        
-                                                                        
-// BaseList= (BASE)*                        // ­åªR BaseList =(BASE)* ³W«h  
-void parseBaseList(Parser *p) {                                         
-  push(p, "BaseList");                      // «Ø¥ß BaseList ªº¾ğ®Ú      
-  while (!isEnd(p) && !isNext(p, "}"))      //  ­åªR BASE¡Aª½¨ìµ{¦¡µ²§ô©Î¸I¨ì } ¬°¤î
+Tree *parseProg(Parser *p) {                // å‰–æPROG = BaseList è¦å‰‡   
+  push(p, "PROG");                          // å»ºç«‹PROGçš„æ¨¹æ ¹                           
+  parseBaseList(p);                         // å‰–æBaselist          
+  return pop(p, "PROG");                    // å–å‡ºPROGçš„å‰–ææ¨¹(ä¸‹æ–¹å¾ˆå¤šå­æ¨¹), æ­¤æ™‚stackç‚ºç©º           
+}                                                    
+                                                                           
+void parseBaseList(Parser *p) {             // å‰–æBaseList= (BASE)* è¦å‰‡                        
+  push(p, "BaseList");                      // å»ºç«‹BaseListçš„æ¨¹æ ¹     
+  while (!isEnd(p) && !isNext(p, "}"))      // å‰–æBase, ç›´åˆ°ç¨‹å¼çµæŸorç¢°åˆ° "}"
       parseBase(p);                                        
-  pop(p, "BaseList");                       // ¨ú¥X BaseList ªº­åªR¾ğ    
+  pop(p, "BaseList");                       // å–å‡ºBaseListå‰–ææ¨¹,æ›åœ¨PROGä¹‹ä¸‹ 
 }
 
-// BASE = FOR | STMT ';'
-void parseBase(Parser *p) {                 // ­åªR BASE = FOR|STMT ³W«h                           
-  push(p, "BASE");                                                                                
-  if (isNext(p, "for"))                     // «Ø¥ß BASE ªº¾ğ®Ú                                     
-      parseFor(p);                          // ¦pªG¤U¤@­Óµü·J¬O for                                  
-  else {                                    //  ®Ú¾Ú FOR ³W«h¶i¦æ­åªR                                
-      parseStmt(p);                         // §_«h                                                  
-      next(p, ";");                         //  ®Ú¾Ú STMT ³W«h¶i¦æ­åªR                               
+void parseBase(Parser *p) {                 // å‰–æBASE = FOR | STMT ';' è¦å‰‡                           
+  push(p, "BASE");                          // å»ºç«‹BASEçš„æ¨¹æ ¹                                                     
+  if (isNext(p, "for"))                     // å¦‚æœä¸‹ä¸€å€‹tokenæ˜¯for                                     
+      parseFor(p);                          // æ ¹æ“šforè¦å‰‡å‰–æ                                
+  else {                                    // å¦å‰‡                               
+      parseStmt(p);                         // æ ¹æ“šSTMTè¦å‰‡å‰–æ                                                   
+      next(p, ";");                         // å–å¾—åˆ†è™Ÿ(å»ºç«‹æ–°çš„ç¯€é»,æ›åœ¨BASEä¹‹ä¸‹)                            
   }                                                                                               
-  pop(p, "BASE");                           // ¨ú¥X BASE ªº­åªR¾ğ                                  
+  pop(p, "BASE");                           // å–å‡ºBaseçš„å‰–ææ¨¹,æ›åœ¨BaseListä¹‹ä¸‹                                 
 }                                                                                                 
-                                                                                                  
-// FOR = for (STMT; COND; STMT) BLOCK       // ­åªR FOR = for ( STMT ; COND ; STMT ) BLOCK 
-void parseFor(Parser *p) {                  // «Ø¥ß FOR ªº¾ğ®Ú                                     
-  push(p, "FOR");                           // ¨ú±o for                                             
-  next(p, "for");                           // ¨ú±o (                                               
-  next(p, "(");                             // ­åªR STMT                                          
-  parseStmt(p);                             // ¨ú±o ;                                               
-  next(p, ";");                             // ­åªR COND                                          
-  parseCond(p);                             // ¨ú±o ;                                               
-  next(p, ";");                             // ­åªR STMT                                          
-  parseStmt(p);                             // ¨ú±o )                                               
-  next(p, ")");                             // ­åªR BLOCK                                         
-  parseBlock(p);                            // ¨ú¥X FOR ªº­åªR¾ğ                                   
-  pop(p, "FOR");
+                                                                                                                                      
+void parseFor(Parser *p) {                  // å‰–æFOR = 'for' '(' STMT ';' 'COND' ';' STMT ')' BLOCK è¦å‰‡                                    
+  push(p, "FOR");                           // å»ºç«‹FORçš„æ¨¹æ ¹                                              
+  next(p, "for");                           // å–å¾—FOR(å»ºç«‹æ–°çš„ç¯€é»,æ›åœ¨FORä¹‹ä¸‹)                                                
+  next(p, "(");                             // å–å¾—(                                         
+  parseStmt(p);                             // å–å¾—STMT                                           
+  next(p, ";");                             // å–å¾—;                                        
+  parseCond(p);                             // å‰–æCOND                                             
+  next(p, ";");                             // å–å¾—;                                       
+  parseStmt(p);                             // å–å¾—STMT                                             
+  next(p, ")");                             // å–å¾—)                                         
+  parseBlock(p);                            // å‰–æBlock                                   
+  pop(p, "FOR");                            // å–å‡ºFORçš„å‰–ææ¨¹,æ›åœ¨BASEä¹‹ä¸‹
 }
 
-// BLOCK = '{' BaseList '}'
-void parseBlock(Parser *p) {
-  push(p, "BLOCK");
+
+void parseBlock(Parser *p) {                // å‰–æBLOCK = '{' BaseList '}' è¦å‰‡
+  push(p, "BLOCK");                         // å»ºç«‹BLOCKçš„æ¨¹æ ¹  
   next(p, "{");
-  parseBaseList(p);
+  parseBaseList(p);                         // å‰–æBaseList                  
   next(p, "}");
-  pop(p, "BLOCK");
+  pop(p, "BLOCK");                          // å–å‡ºBLOCKçš„å‰–ææ¨¹,æ›åœ¨FORä¹‹ä¸‹
 }
 
-// STMT = return id | id '=' EXP  | id OP1
-void parseStmt(Parser *p) {
-  push(p, "STMT");
-  if (isNext(p, "return")) {
-    next(p, "return");
-    next(p, "id");
-  } else {
-    next(p, "id");
-    if (isNext(p, "="))  { // id '=' EXP   --> ASSIGN
-      next(p, "=");
-      parseExp(p);
-    } else              // id OP1
+
+void parseStmt(Parser *p) {                 // å‰–æSTMT = 'return' id | id '=' EXP  | id OP1 è¦å‰‡
+  push(p, "STMT");                          // å»ºç«‹STMTçš„æ¨¹æ ¹ 
+  if (isNext(p, "return")) {                // å¦‚æœä¸‹ä¸€å€‹tokenæ˜¯return
+    next(p, "return");                      // å–å¾—return 
+    next(p, "id");                          // å–å¾—id
+  } else {                         
+    next(p, "id");                          // å–å¾—id
+    if (isNext(p, "="))  {                  // id '=' EXP   --> ASSIGN
+      next(p, "=");                         // å–å¾—=
+      parseExp(p);                          // å‰–æEXP
+    } else                                  // id OP1
       next(p, OP1);
   }
-  pop(p, "STMT");
+  pop(p, "STMT");                           // å–å‡ºSTMTçš„å‰–ææ¨¹,æ›åœ¨ä¸Šä¸€å±¤ç¯€é»ä¹‹ä¸‹ 
 }
 
-// EXP = ITEM [+-*/] ITEM | ITEM
-void parseExp(Parser *p) {
-  push(p, "EXP");
-  next(p, ITEM);
-  if (isNext(p, OP2)) {
+void parseExp(Parser *p) {                  // å‰–æEXP = ITEM [+-*/] ITEM | ITEM è¦å‰‡
+  push(p, "EXP");                           // å»ºç«‹EXPçš„æ¨¹æ ¹ 
+  next(p, ITEM);                            // å–å¾—ITEM
+  if (isNext(p, OP2)) {                     // å¦‚æœä¸‹ä¸€å€‹tokenæ˜¯OP2
       next(p, OP2);
       next(p, ITEM);
   }
-  pop(p, "EXP");
+  pop(p, "EXP");                            // å–å‡ºEXPçš„å‰–ææ¨¹,æ›åœ¨ä¸Šä¸€å±¤ç¯€é»ä¹‹ä¸‹  
 }
 
-// COND = EXP COND_OP EXP
-void parseCond(Parser *p) {
-  push(p, "COND");
+void parseCond(Parser *p) {                 // å‰–æCOND = EXP COND_OP EXP è¦å‰‡
+  push(p, "COND");                          // å»ºç«‹CONDçš„æ¨¹æ ¹ 
   parseExp(p);
   next(p, COND_OP);
   parseExp(p);
-  pop(p, "COND");
+  pop(p, "COND");                           // å–å‡ºCONDçš„å‰–ææ¨¹,æ›åœ¨ä¸Šä¸€å±¤ç¯€é»ä¹‹ä¸‹ 
 }
-
+//use spaces to show level(counts of stack)
 char* level(Parser *p) {
-  return strSpaces(p->stack->count);
+  return strSpaces(p->stack->count);                         // return ç”±countå€‹ç©ºæ ¼çµ„æˆçš„string 
 }
-
+//return ç›®å‰charçš„ä¸‹ä¸€å€‹string(ä¸‹ä¸€å€‹token)
 char* nextToken(Parser *p) {
   return (char*) p->tokens->item[p->tokenIdx];
 }
-
+//åˆ¤æ–·æ˜¯å¦åˆ°é”tokensä¸­æœ€å¾Œä¸€å€‹char 
 BOOL isEnd(Parser *p) {
   return (p->tokenIdx >= p->tokens->count);
 }
-
+//åˆ¤æ–·ä¸‹ä¸€å€‹tokenæ˜¯å¦ç‚ºpTypes 
 BOOL isNext(Parser *p, char *pTypes) {
-  char *token = nextToken(p); 
+  char *token = nextToken(p);                                 // å–å¾—ä¸‹ä¸€å€‹token
   if (token == NULL) return FALSE;
-  char *type = tokenToType(token);
+  char *type = tokenToType(token);                            // å¾—åˆ°tokençš„type, |if|for|while|return|, STRING, NUMBER, ID, å–®ä¸€char
   char tTypes[MAX_LEN+1];
-  sprintf(tTypes, "|%s|", pTypes);
-  if (strPartOf(type, tTypes))
+  sprintf(tTypes, "|%s|", pTypes);                            // å°‡pTypeså‰å¾ŒåŠ ä¸Š"|,æ”¾åˆ°tTypes
+  if (strPartOf(type, tTypes))                                // åœ¨tTypesä¸­æŸ¥è©¢æ˜¯å¦å­˜åœ¨type
     return TRUE;
   else
     return FALSE;
 }
-        
-char *next(Parser *p, char *pTypes) {                         // ÀË¬d¤U¤@­Óµü·Jªº«¬ºA                                          
-  char *token = nextToken(p);                                 // ¨ú±o¤U¤@­Óµü·J                                               
-  if (isNext(p, pTypes)) {                                    // ¦pªG¬OpTypes«¬ºA¤§¤@                                         
-    char *type = tokenToType(token);                          //   ¨ú±o«¬ºA                                                    
-    Tree *child = TreeNew(type, token);                       //   «Ø¥ßµü·J¸`ÂI(token,type)                                    
-    Tree *parentTree = ArrayPeek(p->stack);                   //   ¨ú±o¤÷¸`ÂI¡A                                                
-    TreeAddChild(parentTree, child);                          //   ¥[¤J¤÷¸`ÂI¦¨¬°¤l¾ğ                                          
-    printf("%s idx=%d, token=%s, type=%s\n",                  //   ¦L¥Xµü·J¥H«KÆ[¹î                                            
+// å»ºç«‹æ–°çš„å­æ¨¹, ä¸¦æ›åˆ°ä¸Šä¸€å±¤ç¯€é»ä¹‹ä¸‹     
+char *next(Parser *p, char *pTypes) {                         // å…ˆæª¢æŸ¥ä¸‹ä¸€å€‹tokençš„type                                           
+  char *token = nextToken(p);                                 // å–å¾—ä¸‹ä¸€å€‹token                                              
+  if (isNext(p, pTypes)) {                                    // åˆ¤æ–·æ˜¯å¦å±¬æ–¼pTypes                                        
+    char *type = tokenToType(token);                          // å–å¾—ä¸‹ä¸€å€‹tokençš„type                                                      
+    Tree *child = TreeNew(type, token);                       // å»ºç«‹tokenç¯€é»                                      
+    Tree *parentTree = ArrayPeek(p->stack);                   // get the top element for stack, å–å¾—çˆ¶ç¯€é»                                           
+    TreeAddChild(parentTree, child);                          // å°‡ä¸‹ä¸€å€‹tokenåŠ å…¥çˆ¶ç¯€é»æˆç‚ºå­æ¨¹                                            
+    printf("%s idx=%d, token=%s, type=%s\n",                  // å°å‡ºtoken                                             
       level(p),p->tokenIdx,token,type);                                                                                     
-    p->tokenIdx++;                                            //   «e¶i¨ì¤U¤@­Ó¸`ÂI                                            
-    return token;                                             //   ¶Ç¦^¸Óµü·J                                                  
-  } else {                                                    // §_«h(¤U¤@­Ó¸`ÂI«¬ºA¿ù»~)                                     
-    printf("next():%s is not type(%s)\n", token, pTypes);     //   ¦L¥X¿ù»~°T®§                                                
-    error();                                                                                                                
-    p->tokenIdx++;                                            //  «e¶i¨ì¤U¤@­Ó¸`ÂI                                                                                                          
+    p->tokenIdx++;                                            // å‰é€²åˆ°ä¸‹ä¸€å€‹ç¯€é»                                              
+    return token;                                                                                                 
+  } else {                                                    // å¦å‰‡                                     
+    printf("next():%s is not type(%s)\n", token, pTypes);     // ä¸‹ä¸€å€‹ç¯€é»typeéŒ¯èª¤                                               
+    error();                                                  // exit with 1 status                                                             
+    p->tokenIdx++;                                            // å‰é€²åˆ°ä¸‹ä¸€å€‹ç¯€é»                                                                                                           
     return NULL;                                              
   }                                                                                                                         
 }                                                                                                                           
-                                                                                                                            
-Tree* push(Parser *p, char* pType) {                          // «Ø¥ß pType «¬ºAªº¤l¾ğ¡A±À¤J°ïÅ|¤¤                                                              
-  printf("%s+%s\n", level(p), pType);                                                      
-  Tree* tree = TreeNew(pType, "");                                                                                          
-  ArrayPush(p->stack, tree);                                                                                                
+// å»ºç«‹pTypeå‹æ…‹çš„å­æ¨¹,pushåˆ°stack                                                                                                                            
+Tree* push(Parser *p, char* pType) {                                                                                      
+  printf("%s+%s\n", level(p), pType);                         // å°å‡º level & type                                   
+  Tree* tree = TreeNew(pType, "");                            // æ ¹æ“špTypeå»ºç«‹æ–°ç¯€é»tree                                                       
+  ArrayPush(p->stack, tree);                                  // push tree into stack                                                         
   return tree;                                                                                                              
 }                                                                                                                           
-                                                                                                                            
-Tree* pop(Parser *p, char* pType) {                           // ¨ú¥X pType«¬ºAªº¤l¾ğ                                          
-  Tree *tree = ArrayPop(p->stack);                            // ¨ú±o°ïÅ|³Ì¤W¼hªº¤l¾ğ                                         
-  printf("%s-%s\n", level(p), tree->type);                    // ¦L¥X¥H«KÆ[¹î                                                 
-  if (strcmp(tree->type, pType)!=0) {                         // ¦pªG«¬ºA¤£²Å¦X                                               
-    printf("pop(%s):should be %s\n",tree->type,pType);        //  ¦L¥X¿ù»~°T®§                                                
-	error();                                                                                                                   
+// å–å‡ºstackä¸­çš„pTypeå‹æ…‹çš„å­æ¨¹,ä¸¦æ›åˆ°ä¸Šä¸€å±¤ç¯€é»ä¹‹ä¸‹                                                                                                                            
+Tree* pop(Parser *p, char* pType) {                                                                      
+  Tree *tree = ArrayPop(p->stack);                            // å–å¾—stackæœ€ä¸Šå±¤çš„å­æ¨¹                                          
+  printf("%s-%s\n", level(p), tree->type);                    // å°å‡º level & type                                               
+  if (strcmp(tree->type, pType)!=0) {                         // å¦‚æœèˆ‡pTypeå‹æ…‹ä¸ç¬¦åˆ                                           
+    printf("pop(%s):should be %s\n",tree->type,pType);                                                          
+	error();                                                    // å°å‡ºerror                                                                 
   }                                                                                                                         
-  if (p->stack->count > 0) {                                  // ¦pªG°ïÅ|¤£¬OªÅªº                                                                       
-    Tree *parentTree = ArrayPeek(p->stack);                   //  ¨ú¥X¤W¤@¼h­åªR¾ğ                                             
-    TreeAddChild(parentTree, tree);                           //  ±N«Øºc§¹¦¨ªº­åªR¾ğ¥[¤J¤W¤@¼h¸`ÂI¤¤¡A¦¨¬°¤l¾ğ
+  if (p->stack->count > 0) {                                  // å¦‚æœstackä¸æ˜¯ç©ºçš„                                                                       
+    Tree *parentTree = ArrayPeek(p->stack);                   // å°‡å»ºæ§‹å®Œæˆçš„å‰–ææ¨¹,æ›åˆ°å…¶ä¸Šä¸€å±¤çš„ç¯€é»ä¹‹ä¸‹                                            
+    TreeAddChild(parentTree, tree);                           
   }
-  return tree;                                                                                     
+  return tree;                                                // æˆç‚ºå­æ¨¹                                   
 }                                                                                                                           
                                                                                                                             
                                                                                                                             

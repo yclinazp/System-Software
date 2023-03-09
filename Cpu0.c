@@ -1,135 +1,135 @@
 #include "Cpu0.h"
 
-void runObjFile(char *objFile) {                 // µÍ¿¿æ˜æπ•D®Áº∆
+void runObjFile(char *objFile) {                 
   printf("===VM0:run %s on CPU0===\n", objFile);               
-  Cpu0 *cpu0 = Cpu0New(objFile);                 // ´ÿ•ﬂCPU0™´•Û
-  Cpu0Run(cpu0, 0);                              // ∂}©l∞ı¶Ê
-  Cpu0Dump(cpu0);                                // ∂…¶Lº»¶sæπ
-  Cpu0Free(cpu0);                                // ƒ¿©Ò∞Oæ–≈È 
+  Cpu0 *cpu0 = Cpu0New(objFile);                 // create Cpu0 object,load objFile
+  Cpu0Run(cpu0, 0);                              // Âæû0 addressÈñãÂßãrun
+  Cpu0Dump(cpu0);                                // print all register
+  Cpu0Free(cpu0);                                // free Cpu0 object 
 }
 
-Cpu0* Cpu0New(char *objFile) {                   // ´ÿ•ﬂ CPU0 ™´•Û                 
-  Cpu0 *cpu0=ObjNew(Cpu0, 1);                    //  §¿∞t CPU0 ™´•Û™≈∂° 
-  cpu0->m = newFileBytes(objFile, &cpu0->mSize); //  ∏¸§J¨Mπ≥¿… objFile ®Ï∞Oæ–≈È m §§
+Cpu0* Cpu0New(char *objFile) {                                
+  Cpu0 *cpu0=ObjNew(Cpu0, 1);                    // allocate Cpu0 type*1 count memory
+  cpu0->m = newFileBytes(objFile, &cpu0->mSize); // load objFile ÊîæÂà∞m (memory array)
   return cpu0;                                                                
 }                                                                             
                                                                               
-void Cpu0Free(Cpu0 *cpu0) {                      // ßR∞£ CPU0 ™´•Û                 
-  freeMemory(cpu0->m);                           //  ƒ¿©Ò CPU0 ™∫ memory 
-  ObjFree(cpu0);                                 //  ƒ¿©Ò CPU0 ™´•Û                                         
+void Cpu0Free(Cpu0 *cpu0) {                                        
+  freeMemory(cpu0->m);                           
+  ObjFree(cpu0);                                                                        
 }                                                                                         
-                                                                                                                                                            
-#define bits(i, from, to) ((UINT32) i << (31-to) >> (31-to+from)) // ®˙±o from ®Ï to §ß∂°™∫¶Ï§∏                   
-#define ROR(i, k) (((UINT32)i>>k)|(bits(i,32-k, 31)<<(32-k)))// ¶V•k±€¬‡k¶Ï§∏                                           
-#define ROL(i, k) (((UINT32)i<<k)|(bits(i,0,k-1)<<(32-k)))   // ¶V•™±€¬‡k¶Ï§∏                                             
-#define SHR(i, k) ((UINT32)i>>k)                             // ¶V•k≤æ¶Ïk¶Ï§∏                
-#define SHL(i, k) ((UINT32)i<<k)                             // ¶V•™≤æ¶Ïk¶Ï§∏                
-#define bytesToInt32(p) (INT32)(p[0]<<24|p[1]<<16|p[2]<<8|p[3])// 4 byte¬‡ int
-#define bytesToInt16(p) (INT16)(p[0]<<8|p[1])                // 2 byte¬‡ INT16               
-#define int32ToBytes(i, bp) { bp[0]=i>>24; bp[1]=i>>16; bp[2]=i>>8; bp[3]=i;} // int¬‡¨∞4 byte                                             
-#define StoreInt32(i, m, addr) { BYTE *p=&m[addr]; int32ToBytes(i, p); } // i=m[addr°Kaddr+3]                                         
-#define LoadInt32(i, m, addr) { BYTE *p=&m[addr]; i=bytesToInt32(p); } // m[addr..addr+3]=i                                         
-#define StoreByte(b, m, addr) { m[addr] = (BYTE) b; }        // m[addr]=b                                                 
-#define LoadByte(b, m, addr) { b = m[addr]; }                // b=m[addr]                    
+//#define UINT32  unsigned int                                                                                                                                                      
+#define bits(i, from, to) ((UINT32) i << (31-to) >> (31-to+from)) // ÂèñÂæófromÂà∞to‰πãÈñìÁöÑ‰ΩçÂÖÉ (31,30,...1,0)               
+#define ROR(i, k) (((UINT32)i>>k)|(bits(i,32-k, 31)<<(32-k)))// ÂêëÂè≥ÊóãËΩâk‰ΩçÂÖÉ                                         
+#define ROL(i, k) (((UINT32)i<<k)|(bits(i,0,k-1)<<(32-k)))   // ÂêëÂ∑¶ÊóãËΩâk‰ΩçÂÖÉ                                        
+#define SHR(i, k) ((UINT32)i>>k)                             // ÂêëÂè≥Áßª‰Ωçk           
+#define SHL(i, k) ((UINT32)i<<k)                             // ÂêëÂ∑¶Áßª‰Ωçk       
+#define bytesToInt32(p) (INT32)(p[0]<<24|p[1]<<16|p[2]<<8|p[3])// 4byteËΩâ(int) 32bits
+#define bytesToInt16(p) (INT16)(p[0]<<8|p[1])                // 2byteËΩâ(int) 16bits       
+#define int32ToBytes(i, bp) { bp[0]=i>>24; bp[1]=i>>16; bp[2]=i>>8; bp[3]=i;} // int 32bitsËΩâÁÇ∫4byte                                           
+#define StoreInt32(i, m, addr) { BYTE *p=&m[addr]; int32ToBytes(i, p); } // instruction=m[addr...addr+3]                                      
+#define LoadInt32(i, m, addr) { BYTE *p=&m[addr]; i=bytesToInt32(p); } // m[addr...addr+3]=instruction                                       
+#define StoreByte(b, m, addr) { m[addr] = (BYTE) b; }        // m[addr]=b                                             
+#define LoadByte(b, m, addr) { b = m[addr]; }                // b=m[addr]                 
                                                                                           
 #define PC R[15]                                             // PC is R[15]                  
-#define LR R[14]                                             // LR is R[14]                  
-#define SP R[13]                                             // SP is R[13]                  
-#define SW R[12]                                             // SW is R[12]                  
+#define LR R[14]                                             //                    
+#define SP R[13]                                             // Sack Pointer Register is R[13]                  
+#define SW R[12]                                             // Satus Words is R[12]                  
 
-void Cpu0Run(Cpu0 *cpu0, int start) {                        // µÍ¿¿æ˜æπ™∫•D≠n∞ı¶Ê®Áº∆                   
+void Cpu0Run(Cpu0 *cpu0, int start) {                                            
   char buffer[200];
   unsigned int IR, op, ra, rb, rc, cc;                                                                         
   int c5, c12, c16, c24, caddr, raddr;                                                                
   unsigned int N, Z;
-  BYTE *m=cpu0->m;                                                                                    
+  BYTE *m=cpu0->m;                                           // Ë®≠ÂÆöËµ∑Âßãaddress                                     
   int  *R=cpu0->R;                                           
-  PC = start;                                                // ≥]©w∞_©l¶Ïß}°A∑«≥∆∂}©l∞ı¶Ê                             
+  PC = start;                                                //                              
   LR = -1;                                                                                
-  BOOL stop = FALSE;                                                                                  
-  while (!stop) {                                            // ¶p™G©|•ºµ≤ßÙ                             
-    R[0] = 0;                                                // R[0] •√ª∑¨∞ 0                            
-    LoadInt32(IR, m, PC);                                    // ´¸•O¬^®˙°AIR=[PC..PC+3]                                 
-    cpu0->IR = IR;                                           // ®˙±o´¸•Oº»¶sæπ                           
-    PC += 4;                                                 // ¬^®˙ßπ±N PC •[ 4°A´¸¶V§U§@≠”´¸•O
-    op = bits(IR, 24, 31);                                   // ®˙±o op ƒÊ¶Ï°AIR[24..31]
-    ra = bits(IR, 20, 23);                                   // ®˙±o ra ƒÊ¶Ï°AIR[20..23]    
-    rb = bits(IR, 16, 19);                                   // ®˙±o rb ƒÊ¶Ï°AIR[16..19]
-    rc = bits(IR, 12, 15);                                   // ®˙±o rc ƒÊ¶Ï°AIR[12..15]
-    c5 = bits(IR,  0, 4);                                    // ®˙±o 5  ¶Ï§∏™∫ cx 
-    c12= bits(IR, 0, 11);                                    // ®˙±o 12 ¶Ï§∏™∫ cx 
-    c16= bits(IR, 0, 15);                                    // ®˙±o 16 ¶Ï§∏™∫ cx                         
-    c24= bits(IR, 0, 23);                                    // ®˙±o 24 ¶Ï§∏™∫ cx                                         
-    N  = bits(SW, 31, 31);
-    Z  = bits(SW, 30, 30);
-    if (bits(IR, 11, 11)!=0) c12 |= 0xFFFFF000;              // ≠Y cx ¨∞≠tº∆°A´hΩ’æ„¨∞2∏…º∆ÆÊ¶°                                         
-    if (bits(IR, 15, 15)!=0) c16 |= 0xFFFF0000;              // ≠Y cx ¨∞≠tº∆°A´hΩ’æ„¨∞2∏…º∆ÆÊ¶°                                        
-    if (bits(IR, 23, 23)!=0) c24 |= 0xFF000000;              // ≠Y cx ¨∞≠tº∆°A´hΩ’æ„¨∞2∏…º∆ÆÊ¶°                                                                                 
-    caddr = R[rb]+c16;                                       // ®˙±o¶Ïß}[Rb+cx]                          
-    raddr = R[rb]+R[rc];                                     // ®˙±o¶Ïß}[Rb+Rc]                          
-    switch (op) {                                            // Æ⁄æ⁄op∞ı¶Ê∞ ß@                           
-      case OP_LD : LoadInt32(R[ra], m, caddr); break;        // ≥B≤z LD ´¸•O                            
-      case OP_ST : StoreInt32(R[ra], m, caddr); break;       // ≥B≤z ST ´¸•O                            
-      case OP_LDB: LoadByte(R[ra], m, caddr); break;         // ≥B≤z LDB ´¸•O                            
-      case OP_STB: StoreByte(R[ra], m, caddr); break;        // ≥B≤z STB ´¸•O                            
-      case OP_LDR: LoadInt32(R[ra], m, raddr); break;        // ≥B≤z LDR ´¸•O                           
-      case OP_STR: StoreInt32(R[ra], m, raddr); break;       // ≥B≤z STR ´¸•O                           
-      case OP_LBR: LoadByte(R[ra], m, raddr); break;         // ≥B≤z LBR ´¸•O                           
-      case OP_SBR: StoreByte(R[ra], m, raddr); break;        // ≥B≤z SBR ´¸•O                           
-      case OP_LDI: R[ra] = c16; break;                       // ≥B≤z LDI ´¸•O                           
-      case OP_CMP: {                                         // ≥B≤zCMP´¸•O°AÆ⁄æ⁄§Ò∏˚µ≤™G°A≥]©w N,Z ∫Xº– 
-        if (R[ra] > R[rb]) {                                 // > : SW(N=0, Z=0)
-          SW &= 0x3FFFFFFF;                                  // N=0, Z=0
-        } else if (R[ra] < R[rb]) {                          // < : SW(N=1, Z=0, ....)                                                
-          SW |= 0x80000000;                                  // N=1;
-          SW &= 0xBFFFFFFF;                                  // Z=0;
-        } else {                                             // = : SW(N=0, Z=1)                      
-          SW &= 0x7FFFFFFF;                                  // N=0;
-          SW |= 0x40000000;                                  // Z=1;
+  BOOL stop = FALSE;                                         //                                        
+  while (!stop) {                                            // Â¶ÇÊûúÂ∞öÊú™ÁµêÊùü                          
+    R[0] = 0;                                                //                           
+    LoadInt32(IR, m, PC);                                    // fetch instruction, m[PC...PC+3]=IR                            
+    cpu0->IR = IR;                                           // IR<-m[addr...addr+3]                      
+    PC += 4;                                                 // 
+    op = bits(IR, 24, 31);                                   // ÂèñÂæóopÊ¨Ñ‰Ωç
+    ra = bits(IR, 20, 23);                                   // ÂèñÂæóRaÊ¨Ñ‰Ωç
+    rb = bits(IR, 16, 19);                                   // ÂèñÂæóRbÊ¨Ñ‰Ωç
+    rc = bits(IR, 12, 15);                                   // ÂèñÂæóRcÊ¨Ñ‰Ωç
+    c5 = bits(IR, 0, 4);                                     // ÂèñÂæó5, 12, 16, 24‰ΩçÂÖÉÁöÑCxÊ¨Ñ‰Ωç
+    c12= bits(IR, 0, 11);                                     
+    c16= bits(IR, 0, 15);                                                              
+    c24= bits(IR, 0, 23);                                                                              
+    N  = bits(SW, 31, 31);                                   // ÂèñÂæóÁãÄÊÖãÊö´Â≠òÂô®‰∏≠NÊóóÊ®ô
+    Z  = bits(SW, 30, 30);                                   // ÂèñÂæóÁãÄÊÖãÊö´Â≠òÂô®‰∏≠ZÊóóÊ®ô
+    if (bits(IR, 11, 11)!=0) c12 |= 0xFFFFF000;              // Ëã•ÁÇ∫Ë≤†Êï∏ ÂâáË™øÊï¥ÁÇ∫2's complement                                       
+    if (bits(IR, 15, 15)!=0) c16 |= 0xFFFF0000;              // if Á¨¨16bit=1, Â∞áÂâçÈù¢16bitsË®≠ÁÇ∫1 ‰øùÁïôÂæåÈù¢16bits                                         
+    if (bits(IR, 23, 23)!=0) c24 |= 0xFF000000;              // if Á¨¨23bit=1, Â∞áÂâçÈù¢24bitsË®≠ÁÇ∫1 ‰øùÁïôÂæåÈù¢8bits                                                                                 
+    caddr = R[rb]+c16;                                       // ÂèñÂæó‰ΩçÂùÄ[Rb+cx]                         
+    raddr = R[rb]+R[rc];                                     // ÂèñÂæó‰ΩçÂùÄ[Rb+Rc]                         
+    switch (op) {                                            // Ê†πÊìöopÂü∑Ë°åÂãï‰Ωú                           
+      case OP_LD : LoadInt32(R[ra], m, caddr); break;                                     
+      case OP_ST : StoreInt32(R[ra], m, caddr); break;                                 
+      case OP_LDB: LoadByte(R[ra], m, caddr); break;                                   
+      case OP_STB: StoreByte(R[ra], m, caddr); break;                                   
+      case OP_LDR: LoadInt32(R[ra], m, raddr); break;                                  
+      case OP_STR: StoreInt32(R[ra], m, raddr); break;                                  
+      case OP_LBR: LoadByte(R[ra], m, raddr); break;                                    
+      case OP_SBR: StoreByte(R[ra], m, raddr); break;                                   
+      case OP_LDI: R[ra] = c16; break;                                                 
+      case OP_CMP: {                                           
+        if (R[ra] > R[rb]) {                                 // Â§ßÊñº
+          SW &= 0x3FFFFFFF;                                  // Ë®≠ÂÆöN=0, Z=0
+        } else if (R[ra] < R[rb]) {                          // Â∞èÊñº                                                
+          SW |= 0x80000000;                                  // Ë®≠ÂÆöN=1
+          SW &= 0xBFFFFFFF;                                  // Ë®≠ÂÆöZ=0
+        } else {                                             // Á≠âÊñº                
+          SW &= 0x7FFFFFFF;                                  // Ë®≠ÂÆöN=0
+          SW |= 0x40000000;                                  // Ë®≠ÂÆöZ=1
         }
-        ra = 12;
+        ra = 12;                                             // Êåá‰ª§Âü∑Ë°åÂÆåÂæå Ëº∏Âá∫R12
         break;                                                                                        
-      } case OP_MOV: R[ra] = R[rb]; break;                   // ≥B≤zMOV´¸•O                             
-      case OP_ADD: R[ra] = R[rb] + R[rc]; break;             // ≥B≤zADD´¸•O                             
-      case OP_SUB: R[ra] = R[rb] - R[rc]; break;             // ≥B≤zSUB´¸•O                             
-      case OP_MUL: R[ra] = R[rb] * R[rc]; break;             // ≥B≤zMUL´¸•O                             
-      case OP_DIV: R[ra] = R[rb] / R[rc]; break;             // ≥B≤zDIV´¸•O                             
-      case OP_AND: R[ra] = R[rb] & R[rc]; break;             // ≥B≤zAND´¸•O                             
-      case OP_OR:  R[ra] = R[rb] | R[rc]; break;             // ≥B≤zOR´¸•O                              
-      case OP_XOR: R[ra] = R[rb] ^ R[rc]; break;             // ≥B≤zXOR´¸•O                             
-      case OP_ROL: R[ra] = ROL(R[rb],c5); break;             // ≥B≤zROL´¸•O                             
-      case OP_ROR: R[ra] = ROR(R[rb],c5); break;             // ≥B≤zROR´¸•O                             
-      case OP_SHL: R[ra] = SHL(R[rb],c5); break;             // ≥B≤zSHL´¸•O                             
-      case OP_SHR: R[ra] = SHR(R[rb],c5); break;             // ≥B≤zSHR´¸•O                             
-      case OP_JEQ: if (Z==1) PC += c24; break;               // ≥B≤zJEQ´¸•O Z=1
-      case OP_JNE: if (Z==0) PC += c24; break;               // ≥B≤zJNE´¸•O Z=0 
-      case OP_JLT: if (N==1&&Z==0) PC += c24; break;         // ≥B≤zJLT´¸•O NZ=10 
-      case OP_JGT: if (N==0&&Z==0) PC += c24; break;         // ≥B≤zJGT´¸•O NZ=00
-      case OP_JLE:                                           // ≥B≤zJLE´¸•O NZ=10 or 01
+      } case OP_MOV: R[ra] = R[rb]; break;                                              
+      case OP_ADD: R[ra] = R[rb] + R[rc]; break;                                       
+      case OP_SUB: R[ra] = R[rb] - R[rc]; break;                                        
+      case OP_MUL: R[ra] = R[rb] * R[rc]; break;                                          
+      case OP_DIV: R[ra] = R[rb] / R[rc]; break;                                         
+      case OP_AND: R[ra] = R[rb] & R[rc]; break;                                          
+      case OP_OR:  R[ra] = R[rb] | R[rc]; break;                                          
+      case OP_XOR: R[ra] = R[rb] ^ R[rc]; break;                                          
+      case OP_ROL: R[ra] = ROL(R[rb],c5); break;                                         
+      case OP_ROR: R[ra] = ROR(R[rb],c5); break;                                        
+      case OP_SHL: R[ra] = SHL(R[rb],c5); break;                                      
+      case OP_SHR: R[ra] = SHR(R[rb],c5); break;                                         
+      case OP_JEQ: if (Z==1) PC += c24; break;               // equal 
+      case OP_JNE: if (Z==0) PC += c24; break;               // not equal
+      case OP_JLT: if (N==1&&Z==0) PC += c24; break;         // <
+      case OP_JGT: if (N==0&&Z==0) PC += c24; break;         // >
+      case OP_JLE:                                           // <=
            if ((N==1&&Z==0)||(N==0&&Z==1)) PC+=c24; break;
-      case OP_JGE:                                           // ≥B≤zJGE´¸•O NZ=00 or 01
+      case OP_JGE:                                           // >=
            if ((N==0&&Z==0)||(N==0&&Z==1)) PC+=c24; break;
-      case OP_JMP: PC+=c24; break;                           // ≥B≤zJMP´¸•O                             
-      case OP_SWI: LR = PC; PC=c24; break;                   // ≥B≤zSWI´¸•O                             
-      case OP_JSUB:LR = PC; PC+=c24; break;                  // ≥B≤zJSUB´¸•O                            
-      case OP_RET: if (LR<0) stop=TRUE; else PC=LR; break;   // ≥B≤zRET´¸•O                             
-      case OP_PUSH:SP-=4; StoreInt32(R[ra], m, SP); break;   // ≥B≤zPUSH´¸•O                            
-      case OP_POP: LoadInt32(R[ra], m, SP); SP+=4; break;    // ≥B≤zPOP´¸•O                             
-      case OP_PUSHB:SP--; StoreByte(R[ra], m, SP); break;    // ≥B≤zPUSH´¸•O                            
-      case OP_POPB:LoadByte(R[ra], m, SP); SP++; break;      // ≥B≤zPOPB´¸•O                            
+      case OP_JMP: PC+=c24; break;                           // ÁÑ°Ê¢ù‰ª∂                          
+      case OP_SWI: LR = PC; PC=c24; break;                   // SW interrupt                           
+      case OP_JSUB:LR = PC; PC+=c24; break;                                               
+      case OP_RET: if (LR<0) stop=TRUE; else PC=LR; break;   // Áï∂LR=-1,Ë∑≥Âá∫,else return                            
+      case OP_PUSH:SP-=4; StoreInt32(R[ra], m, SP); break;                              
+      case OP_POP: LoadInt32(R[ra], m, SP); SP+=4; break;                                 
+      case OP_PUSHB:SP--; StoreByte(R[ra], m, SP); break;                                
+      case OP_POPB:LoadByte(R[ra], m, SP); SP++; break;                                 
       default: printf("Error:invalid op (%02x) ", op);                                                
     }                                                                                                 
-    sprintf(buffer, "PC=%08x IR=%08x SW=%08x R[%02d]=0x%08x=%d\n", // ¶L•X PC, IR, R[ra]º»¶sæπ™∫≠»°A•HßQ∆[πÓ
+    sprintf(buffer, "PC=%08x IR=%08x SW=%08x R[%02d]=0x%08x=%d\n", //print PC IR SW R[ra]ÁöÑhexoÂíåÊï¥Êï∏
                          PC,      IR,     SW,  ra,    R[ra],R[ra]);
     strToUpper(buffer);
-    printf(buffer);
+    printf(buffer);                                                //print sting buffer
   }                                                                                                   
 }                                                                                       
                                                                                         
-void Cpu0Dump(Cpu0 *cpu0) {                                  // ¶L•X©“¶≥º»¶sæπ                           
+void Cpu0Dump(Cpu0 *cpu0) {                                  // print all registers (dumpÂÇæÂÄí)                        
   printf("\n===CPU0 dump registers===\n");                                                            
-  printf("IR =0x%08x=%d\n", cpu0->IR, cpu0->IR);             // ¶L•X IR                                                                           
+  printf("IR =0x%08x=%d\n", cpu0->IR, cpu0->IR);             // print IR                                                                         
   int i;                                                                   
-  for (i=0; i<16; i++)                                       // ¶L•X R0..R15  
+  for (i=0; i<16; i++)                                       // print R0~R15 
     printf("R[%02d]=0x%08x=%d\n",i,cpu0->R[i],cpu0->R[i]);
 }

@@ -4,16 +4,16 @@
 #include "OpTable.h"
 
 typedef struct {
-  BYTE *m;
-  int mSize;
-  int R[16], IR;
-} Cpu0;
+  BYTE *m;                      // memory array
+  int mSize;                    // memory size
+  int R[16], IR;                // R0-R15, Instruction register
+} Cpu0;                         
 
-void runObjFile(char *objFile); // µêÀÀ¾÷¾¹ªº¥D­n¨ç¼Æ 
+void runObjFile(char *objFile);  
 
-Cpu0* Cpu0New(char *objFile);
-void Cpu0Free(Cpu0 *cpu0);
-void Cpu0Run(Cpu0 *cpu0, int startPC);
-void Cpu0Dump(Cpu0 *cpu0);
+Cpu0* Cpu0New(char *objFile);   // create Cpu0 object,load objFile
+void Cpu0Free(Cpu0 *cpu0);      // free Cpu0 object
+void Cpu0Run(Cpu0 *cpu0, int startPC); // å¾žstartPC addressé–‹å§‹run
+void Cpu0Dump(Cpu0 *cpu0);      // print all register
 
 #endif

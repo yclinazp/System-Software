@@ -5,7 +5,10 @@ LIBS =
 INCS = 
 BIN  = test.exe c0c.exe as0.exe vm0.exe
 CFLAGS = $(INCS) -g3
-RM = rm -f
+
+RM = del #for window
+
+#RM = rm -f #for linux
 
 .PHONY: all clean
 

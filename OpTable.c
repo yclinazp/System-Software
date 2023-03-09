@@ -5,7 +5,7 @@ void OpTableTest() {
   HashTableEach(opTable, (FuncPtr1) OpPrintln);  
   OpTableFree();
 }
-
+// opList每個element都是指向string pointer (name, code, type)
 char *opList[] = {"LD 00 L", "ST 01 L", "LDB 02 L", "STB 03 L", 
   "LDR 04 L", "STR 05 L", "LBR	06 L", "SBR 07 L", "LDI 08 L", 
   "CMP 10 A", "MOV 12 A", "ADD 13 A", "SUB 14 A", "MUL 15 A", 
@@ -17,13 +17,14 @@ char *opList[] = {"LD 00 L", "ST 01 L", "LDB 02 L", "STB 03 L",
 
 HashTable *opTable = NULL;
 
+//create optable(hashtable) stored the op "name, code, type"
 HashTable *OpTableNew() {
-  if (opTable != NULL) return opTable;
+  if (opTable != NULL) return opTable; //check opTable is already initialized
   opTable = HashTableNew(127);
   int i;
-  for (i=0; i<sizeof(opList)/sizeof(char*); i++) {
-    Op *op = OpNew(opList[i]);
-    HashTablePut(opTable, op->name, op);
+  for (i=0; i<sizeof(opList)/sizeof(char*); i++) { //the numbers of strings stored in opList
+    Op *op = OpNew(opList[i]); //將opList 轉換成new Op object "*name, code, type"
+    HashTablePut(opTable, op->name, op);//put (key, new data) into hashtable
   }
   return opTable;
 }
@@ -36,11 +37,11 @@ void OpTableFree() {
   }
 }
 
-Op* OpNew(char *opLine) {
-  Op *op = ObjNew(Op, 1);
+Op* OpNew(char *opLine) { //opLine 需要轉換的string
+  Op *op = ObjNew(Op, 1); //allocate Op type *1 count memory
   char opName[100];
-  sscanf(opLine, "%s %x %c", opName, &op->code, &op->type);
-  op->name = newStr(opName);
+  sscanf(opLine, "%s %x %c", opName, &op->code, &op->type);//將opLine string轉成特定type (string, hex, singel char)
+  op->name = newStr(opName);//  allocates memory on the heap (dynamiclly)
   return op;
 }
 
