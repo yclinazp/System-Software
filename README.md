@@ -8,7 +8,7 @@
 * [Reference](#Reference)
 
 # Background
-參考系統程式 - 陳鍾誠(https://www.flag.com.tw/books/product/F7501)
+參考[系統程式 - 陳鍾誠]一書(https://www.flag.com.tw/books/product/F7501)
 使用C語言實作一簡單系統軟體C0語言(包含組譯器、虛擬機器、剖析氣、編譯器),C0語言包含for迴圈和基本運算式功能
 
 # Install
