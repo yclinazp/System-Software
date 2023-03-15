@@ -5,7 +5,7 @@
 
 typedef struct {
   char *type;                             //樹節點的類型
-  char *value;                            //樹節點的值
+  char *value;                            //樹節點的常數值or變數名稱
   Array* childs;                          //樹節點的子節點
 } Tree;
 

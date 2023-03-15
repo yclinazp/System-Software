@@ -1,12 +1,12 @@
 #include "Parser.h"
 #include "Generator.h"
 
-void compile(char *cFile, char *asmFile) {     // ½sÄ¶¾¹¥Dµ{¦¡                  
+void compile(char *cFile, char *asmFile) {                      
   printf("compile file:%s\n", cFile, asmFile);                               
-  char *cText = newFileStr(cFile);             //   Åª¨úÀÉ®×¨ì cText ¦r¦ê¤¤¡C   
-  Parser *parser = parse(cText);               //   ­åªRµ{¦¡ (cText) Âà¬°»yªk¾ð 
-  generate(parser->tree, asmFile);             //   µ{¦¡½X²£¥Í                  
-  ParserFree(parser);                          //   ÄÀ©ñ°O¾ÐÅé                  
+  char *cText = newFileStr(cFile);             //   è®€å–æª”æ¡ˆåˆ°cText string
+  Parser *parser = parse(cText);               //   å‰–æžcTextè½‰ç‚ºèªžæ³•æ¨¹
+  generate(parser->tree, asmFile);             //   å°‡èªžæ³•æ¨¹è½‰ç‚ºç›®çš„ç¢¼                  
+  ParserFree(parser);                                           
   freeMemory(cText);
 }
 
