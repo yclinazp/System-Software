@@ -7,7 +7,7 @@
 //1.Scanner 將text切成一個個tokens
 //2.Parser 語法剖析 比對各個EBNF語法規則,使用stack將tokens轉換成一棵語法樹
 //3.Parser 語意分析 確認各個node type是否相容,輸出具有標記的語意樹
-//4.中間碼
+
 typedef struct {                                  
   Array *tokens;                           // 詞彙串列       
   Tree *tree;                              // 剖析樹 (樹根 )     

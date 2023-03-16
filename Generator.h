@@ -3,6 +3,9 @@
 
 #include "Tree.h"
 #include "HashTable.h"
+//程式產生器Generator
+//1.GenCode()  將語意樹轉換為組合語言檔案
+//2.GenData()  將符號表中所有符號轉換為資料宣告的RESW
 
 typedef struct {                                                                                     
   HashTable *symTable;                                                                    // 符號表                       

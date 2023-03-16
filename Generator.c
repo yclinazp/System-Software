@@ -1,5 +1,7 @@
 #include "Generator.h"
 #include <ctype.h>
+
+
 //將語法樹tree轉為組合語言檔asmFile
 void generate(Tree *tree, char *asmFile) {      
   char nullVar[100]="";                                                             
@@ -28,7 +30,8 @@ void GenFree(Generator *g) {
 }
 
 char nullVar[100]="";
-//程式轉換,遞迴方式訪問每一個節點, 取出對應子節點, 以子節點傳回內容進行轉換
+//程式轉換,遞迴方式訪問每一個節點, 取出對應子節點, 以子節點傳回內容進行轉換 (char *rzVar: 記錄要返回的變數名稱)
+//子節點儲存方式為Array
 Tree* GenCode(Generator *g, Tree *node, char *rzVar) {                                   
   strcpy(nullVar, "");                                                                                          
   strcpy(rzVar, "");                                                            // rzVar、nullVar設為空string                                  
@@ -46,9 +49,9 @@ Tree* GenCode(Generator *g, Tree *node, char *rzVar) {
     sprintf(forBeginLabel, "FOR%d", tempForCount);                              // 進入標記                              
     sprintf(forEndLabel, "_FOR%d", tempForCount);                               // 離開標記           
     GenPcode(g, forBeginLabel, "", "", "", "");                                 // 輸出中間碼:例如 FOR0:
-    GenCode(g, cond, condOp);                                                   // 遞迴產生COND     
+    GenCode(g, cond, condOp);                                                   // 遞迴產生COND,比較運算變數, 例如 <=    
     char negOp[100];                                                                                  
-    negateOp(condOp, negOp);                                                    // 互補運算negOp       
+    negateOp(condOp, negOp);                                                    // 互補運算negOp (<=變成>)      
     GenPcode(g, "", "J", negOp, "", forEndLabel);                               // 中間碼:例如 J >_FOR0 
     GenCode(g, block, nullVar);                                                 // 遞迴產生BLOCK     
     GenCode(g, stmt2, nullVar);                                                 // 遞迴產生STMT      
@@ -56,7 +59,7 @@ Tree* GenCode(Generator *g, Tree *node, char *rzVar) {
     GenPcode(g, forEndLabel, "", "", "", "");                                   // 中間碼:例如 _FOR0  
     return NULL;                                                                                      
   } else if (strEqual(node->type, "STMT")) {                                    // [處理STMT節點]          
-    // (三個子節點) STMT = return id | id '=' EXP | id ('++'|'--')                                          
+    // (處理三個子節點) STMT = return id | id '=' EXP | id ('++'|'--')                                          
     Tree *c1 = node->childs->item[0];                                           // 取得子節點             
     if (strEqual(c1->type, "return")) {                                         // 處理return 
       // return id                              
@@ -67,12 +70,12 @@ Tree* GenCode(Generator *g, Tree *node, char *rzVar) {
       Tree *op = node->childs->item[1];                                                                   
       if (strEqual(op->type, "=")) {                                            // 處理id = EXP         
         // STMT  id '=' EXP                                                                    
-        Tree *exp = node->childs->item[2];                                      // 取得子節點                            
+        Tree *exp = node->childs->item[2];                                      // 取得子節點EXP                            
         char expVar[100];                                                          
-        GenCode(g, exp, expVar);                                                // 遞迴產生EXP            
+        GenCode(g, exp, expVar);                                                // 遞迴產生EXP,將運算結果存在expVar             
         GenPcode(g, "", "=", expVar, "", id->value);                            // 中間碼: 例如 = 0 sum 
         HashTablePut(g->symTable, id->value, id->value);                        // 將id加入到符號表中                             
-        strcpy(rzVar, expVar);                                                  // 傳回EXP的變數, 例如 T0   
+        strcpy(rzVar, expVar);                                                  // 傳回EXP的運算結果, 例如 T0   
       } else {  
         // id ('++'|'--')                                                                
         char addsub[100];                                                                                 
@@ -86,31 +89,33 @@ Tree* GenCode(Generator *g, Tree *node, char *rzVar) {
     }                                                                           
   } else if (strEqual(node->type, "COND")) {                                    // [處理COND節點]  
     // (三個子節點)  COND = EXP ('=='|'!='|'<='|'>='|'<'|'>') EXP                               
-    Tree* op = node->childs->item[1];                                           // 取得子節點          
+    Tree* op = node->childs->item[1];                                           // 取得子節點op       
     char expVar1[100], expVar2[100];                                                                  
     GenCode(g, node->childs->item[0], expVar1);                                 // 遞迴產生EXP,存在expVar1     
     GenCode(g, node->childs->item[2], expVar2);                                 // 遞迴產生EXP,存在expVar2    
     GenPcode(g, "", "CMP", expVar1, expVar2, nullVar);                          // 產生中間碼: 例如 CMP i, 10 
-    strcpy(rzVar, op->value);                                                   // 傳回比較運算, 例如 >
+    strcpy(rzVar, op->value);                                                   // 傳回比較運算變數, 例如 >
+
   } else if (strPartOf(node->type, "|EXP|")) {                                  // [處理EXP節點]
     //  EXP = ITEM ([+-*/] ITEM)*                                               
-    Tree *item1 = node->childs->item[0];                                        // 取得子節點 ITEM      
+    Tree *item1 = node->childs->item[0];                                        // 取得子節點 ITEM1      
     char var1[100], var2[100], tempVar[100];                                                          
     GenCode(g, item1, var1);                                                    // 遞迴產生ITEM,存在var1
     if (node->childs->count > 1) {             
-      Tree* op = node->childs->item[1];                                         // 取得 op和ITEM
+      Tree* op = node->childs->item[1];                                         // 取得子節點 op和ITEM2
       Tree* item2 = node->childs->item[2];                                                         
       GenCode(g, item2, var2);                                                  // 遞迴產生ITEM,存在var2       
       GenTempVar(g, tempVar);                                                   // 取得臨時變數,例如 T0
       GenPcode(g, "", op->value, var1, var2, tempVar);                          // 產生中間碼: 例如 + sum i T0
-      strcpy(var1, tempVar);                                                    // 傳回臨時變數, 例如 T0   
+      strcpy(var1, tempVar);                                                    // 傳回臨時變數, 例如T0 (=sum+i)   
     }                                                                                                 
-    strcpy(rzVar, var1);                                                        // 傳回臨時變數, 例如 T0  
+    strcpy(rzVar, var1);                                                        // 傳回臨時變數給rzVar, 例如 T0 (=sum+i)  
+
   } else if (strPartOf(node->type, "|number|id|")) {                            // [處理|number|id|節點]                                                        
     strcpy(rzVar, node->value);                                                 // 遇到常數或變數 直接傳回常數值or變數名稱
-  } else if (node->childs != NULL) {                                            // [其他情況]                                                                      
-    int i;                                                                                         
-    for (i=0; i<node->childs->count; i++)                                       // 遞迴處理所有子節點 (PROG BaseList BASE BLOCK )
+
+  } else if (node->childs != NULL) {                                            // [其他情況]                                                                                                                                                              
+    for (int i=0; i<node->childs->count; i++)                                   // 遞迴處理所有子節點 (PROG BaseList BASE BLOCK )
       GenCode(g, node->childs->item[i], nullVar);                               // 不需傳回值
   }
   return NULL;
@@ -132,7 +137,7 @@ void GenData(Generator *g) {
   }
   ArrayFree(symArray, NULL);
 }
-//將語法樹轉換成pcode虛擬碼再轉為組合語言
+//將語法樹轉換成pcode虛擬碼,再呼叫GenPcodeToAsm轉為組合語言
 void GenPcode(Generator *g, char* label, char* op, char* p1, char* p2, char* pTo) {                
   char labelTemp[100];                                                                                                      
   if (strlen(label)>0)                                                                     // 有label                                                                                      
