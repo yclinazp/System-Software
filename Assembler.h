@@ -17,20 +17,20 @@ typedef struct {                                    // 指令物件
   char *objCode;                                    // 目的碼      
 } AsmCode;                                                               
                                                                                    
-void assemble(char *asmFile, char *objFile);        // ��Ķ�����D�{��              
+void assemble(char *asmFile, char *objFile);        //               
                                                                                    
-Assembler* AsmNew();                                // ��Ķ�����غc���               
-void AsmFree(Assembler *a);                         // ��Ķ�����Ѻc���               
+Assembler* AsmNew();                                //             
+void AsmFree(Assembler *a);                         //             
                                                                                    
-void AsmPass1(Assembler *a, char *text);            // ��Ķ�����Ĥ@���q               
-void AsmPass2(Assembler *a);                        // ��Ķ�����ĤG���q               
-void AsmSaveObjFile(Assembler *a, char *objFile);   // �x�s�ت���                     
-void AsmTranslateCode(Assembler *a, AsmCode *code); // �N���O�ର�ت��X               
+void AsmPass1(Assembler *a, char *text);            //           
+void AsmPass2(Assembler *a);                        //               
+void AsmSaveObjFile(Assembler *a, char *objFile);   //                     
+void AsmTranslateCode(Assembler *a, AsmCode *code); //             
 int AsmCodeSize(AsmCode *code);                                                                                   
 AsmCode* AsmCodeNew(char *line);                                                   
-void AsmCodeFree(AsmCode *code);                    // ���O���󪺫غc���             
-int AsmCodePrintln(AsmCode *code);                  // ���O���󪺸Ѻc���             
-                                                    // ���O���󪺦C�L���             
+void AsmCodeFree(AsmCode *code);                    //              
+int AsmCodePrintln(AsmCode *code);                  //            
+                                                    //             
 #endif
 
 

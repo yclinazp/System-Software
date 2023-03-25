@@ -44,7 +44,8 @@ void AsmPass1(Assembler *a, char *text) {
       if (op != NULL) {                               // if key exist
         code->opCode = op->code;                      // setting opCode (00[LD], 01[ST])
         code->type = op->type;                        // setting type(L,A,J)   
-      }                                                  
+      } 
+      // 將label放入symboltable                                                 
       if (strlen(code->label)>0)                      // if含有symbol
         HashTablePut(a->symTable, code->label, code); // put into symbol table
       ArrayAdd(a->codes, code);                       // 將Asmcode code(item) 放入Assenbler codes(Array)

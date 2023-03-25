@@ -1,22 +1,29 @@
 CC   = gcc
 OBJ  = Parser.o Tree.o Lib.o Scanner.o Array.o Compiler.o HashTable.o Generator.o Assembler.o Cpu0.o OpTable.o
+#所有object file
 LINKOBJ = $(OBJ)
+#連結用的目的檔
 LIBS = 
-INCS = 
+#無額外函式庫
+INCS =
+#無額外連結目錄
 BIN  = test.exe c0c.exe as0.exe vm0.exe
+#可執行檔列表
 CFLAGS = $(INCS) -g3
+#顯示編譯訊息
+RM = del #移除指令for window
 
-RM = del #for window
-
-#RM = rm -f #for linux
+#RM = rm -f #移除指令for linux
 
 .PHONY: all clean
+#利用.PHONY 來指定all clean 為 fake 項目, 非真正文件
 
 all: $(OBJ) test c0c as0 vm0
-
+#make會先編譯完所有OBJ, 再創建test、c0c等可執行檔
 test: $(OBJ)
 	$(CC) main.c $(LINKOBJ) -DTARGET=TEST -o test $(LIBS)
-
+#先編譯完所有OBJ 使用gcc編譯main.c 連接所有目標文件，並生成test可執行文件
+#-D define TARGET=TEST
 c0c: $(OBJ)
 	$(CC) main.c $(LINKOBJ) -DTARGET=C0C -o c0c $(LIBS)
 
@@ -31,7 +38,7 @@ clean:
 
 Parser.o: Parser.c
 	$(CC) -c Parser.c -o Parser.o $(CFLAGS)
-
+#如何編譯Parser.o, depend Parser.c, -c表示只編譯不連結
 Tree.o: Tree.c
 	$(CC) -c Tree.c -o Tree.o $(CFLAGS)
 
